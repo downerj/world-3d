@@ -15,6 +15,9 @@
 
 #define QUOTE(x) #x
 #define STRING(x) QUOTE(x)
+#ifdef _DEBUG
+#define DEBUG
+#endif
 #ifdef DEBUG
 #define DEBUG_LOG(s) do { std::cout << s; } while (false);
 #define DEBUG_ERROR(s) do { std::cerr << s; } while (false);
