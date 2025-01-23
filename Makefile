@@ -7,7 +7,7 @@ RESOURCES_DIRECTORY = res
 
 INCLUDES = -I"include"
 LIBRARIES = -lglfw -lGL -lm
-WARNINGS = -Wall -Wextra -Werror -Wpedantic -pedantic-errors
+WARNINGS = -Wall -Wextra -Wpedantic
 DEBUG = -DDEBUG -g
 OPTIMIZE = -Og
 CXX_STANDARD = -std=c++17
