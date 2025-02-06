@@ -7,36 +7,17 @@
 #include <sstream>
 #include <string>
 
+#include "debug.hxx"
+
 #define GLAD_GL_IMPLEMENTATION
 #include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#define QUOTE(x) #x
-#define STRING(x) QUOTE(x)
-#ifdef _DEBUG
-#define DEBUG
-#endif
-#ifdef DEBUG
-#define DEBUG_LOG(s) do { std::cout << s; } while (false);
-#define DEBUG_ERROR(s) do { std::cerr << s; } while (false);
-#define DEBUG_LOG_LINE(s) do { std::cout << s << '\n'; } while (false);
-#define DEBUG_ERROR_LINE(s) do { std::cerr << s << '\n'; } while (false);
-#define DEBUG_LOG_NEWLINE() do { std::cout << '\n'; } while (false);
-#define DEBUG_ERROR_NEWLINE() do { std::cerr << '\n'; } while (false);
-#else
-#define DEBUG_LOG(s)
-#define DEBUG_ERROR(s)
-#define DEBUG_LOG_LINE(s)
-#define DEBUG_ERROR_LINE(s)
-#define DEBUG_LOG_NEWLINE()
-#define DEBUG_ERROR_NEWLINE()
-#endif
-
 #ifdef DEBUG
 void errorCallbackGLFW(int /*error*/, const char* description) {
-  DEBUG_ERROR_LINE("GLFW error: " << description);
+  LOG_ERROR("GLFW error: " << description << '\n');
 }
 
 void debugMessageCallbackGL(
@@ -48,7 +29,7 @@ void debugMessageCallbackGL(
   const GLchar* message,
   const void* /*userParam*/
 ) {
-  DEBUG_ERROR_LINE("GL error: " << message);
+  LOG_ERROR("GL error: " << message << '\n');
 }
 #endif
 
@@ -80,7 +61,7 @@ constexpr std::tuple<int, int> versionOpenGL{3, 3};
 
 GLFWwindow* initializeWindow() {
   if (!glfwInit()) {
-    DEBUG_ERROR_LINE("GLFW error: Initialization failed");
+    LOG_ERROR("GLFW error: Initialization failed\n");
     return nullptr;
   }
 #ifdef DEBUG
@@ -114,15 +95,15 @@ GLFWwindow* initializeWindow() {
   gladLoadGL(glfwGetProcAddress);
 #ifdef DEBUG
   if (GLAD_GL_ARB_debug_output) {
-    DEBUG_LOG_LINE("GL extension GL_ARB_debug_output available");
+    LOG("GL extension GL_ARB_debug_output available\n");
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     glDebugMessageCallbackARB(debugMessageCallbackGL, nullptr /*userParam*/);
   } else {
-    DEBUG_LOG_LINE("GL extension GL_ARB_debug_output unavailable");
+    LOG("GL extension GL_ARB_debug_output unavailable\n");
   }
 #endif
-  DEBUG_LOG_LINE("C++ version: " << STRING(__cplusplus));
-  DEBUG_LOG_LINE("Driver OpenGL version: " << glGetString(GL_VERSION));
+  LOG("C++ version: " << STRING(__cplusplus) << '\n');
+  LOG("Driver OpenGL version: " << glGetString(GL_VERSION) << '\n');
   glfwSwapInterval(1);
   glfwSetKeyCallback(window, keyCallback);
   return window;
@@ -152,14 +133,14 @@ GLuint createProgram(const std::string& vertexSource, const std::string& fragmen
     std::string programLog{};
     programLog.resize(programLogLength);
     glGetProgramInfoLog(program, programLogLength, &programLogLength, programLog.data());
-    DEBUG_ERROR_LINE("GL program error: " << programLog);
+    LOG_ERROR("GL program error: " << programLog << '\n');
     GLsizei vertexLogLength{};
     glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &vertexLogLength);
     if (vertexLogLength > 0) {
       std::string vertexLog{};
       vertexLog.resize(vertexLogLength);
       glGetShaderInfoLog(vertexShader, vertexLogLength, &vertexLogLength, vertexLog.data());
-      DEBUG_ERROR_LINE("GL vertex shader error: " << vertexLog);
+      LOG_ERROR("GL vertex shader error: " << vertexLog << '\n');
     }
     GLsizei fragmentLogLength{};
     glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &fragmentLogLength);
@@ -167,7 +148,7 @@ GLuint createProgram(const std::string& vertexSource, const std::string& fragmen
       std::string fragmentLog{};
       fragmentLog.resize(fragmentLogLength);
       glGetShaderInfoLog(fragmentShader, fragmentLogLength, &fragmentLogLength, fragmentLog.data());
-      DEBUG_ERROR_LINE("GL fragment shader error: " << fragmentLog);
+      LOG_ERROR("GL fragment shader error: " << fragmentLog << '\n');
     }
   }
 #endif
