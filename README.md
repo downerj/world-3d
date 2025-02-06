@@ -1,39 +1,42 @@
-# flying-camera-test-gl
-This project is a 3D camera test in OpenGL. It is meant to be a personal exploration into modern OpenGL (Core).
+# world-3d
+This project is meant to be a personal exploration into modern OpenGL (Core).
 
 ## Building
-This version of the software successfully builds with debug flags on Ubuntu Linux 24.10 and Windows 11.
+This version of the software successfully builds with debug flags on Ubuntu Linux 24.10.
+
+### Third-party libraries
+
+#### GLAD 2
+This project utilizes the GLAD extension loading library for OpenGL. You'll first need to generate a GLAD header file for inclusion in the project using [GLAD 2](https://gen.glad.sh).
+
+The GLAD settings are as follows:
+- **Generator**: C/C++
+- **APIs**:
+  - **gl**: Version 3.3 Core
+- **Extensions**:
+  - GL_ARB_debug_output
+- **Options**:
+  - Header only
+
+You can also use [the corresponding permalink](http://glad.sh/#api=gl%3Acore%3D3.3&extensions=GL_ARB_debug_output&generator=c&options=HEADER_ONLY).
+
+#### GLFW
+This project uses the GLFW window and context management library. It can be linked dynamically or statically, though static linking may require you to build GLFW from source.
 
 ### Ubuntu Linux
 1. Install/generate the following:
    - GCC
    - GNU Make
-   - GLAD 2
-     - OpenGL 3.3 Core
-     - `GL_ARB_debug_output` extension
-     - Header only
-     - Command line: `--api='gl:core=3.3' --extensions='GL_ARB_debug_output' c --header-only`
-     - Online: http://glad.sh/#api=gl%3Acore%3D3.3&extensions=GL_ARB_debug_output&generator=c&options=HEADER_ONLY
-   - GLFW 3.4 (dynamically linked)
+   - GLAD 2 header
+   - GLFW 3.4
    - GLM 0.9.9.8
-2. Copy the GLAD header file into a new `include/glad` directory:
+1. Copy the GLAD header file into the following (new) location:
    - `include/glad/gl.h`
-3. Compile using `make`.
-
-### Windows (Visual Studio)
-1. Install/generate the following:
-   - GLAD 2
-     - OpenGL 3.3 Core
-     - `GL_ARB_debug_output` extension
-     - Header only
-     - Command line: `--api='gl:core=3.3' --extensions='GL_ARB_debug_output' c --header-only`
-     - Online: http://glad.sh/#api=gl%3Acore%3D3.3&extensions=GL_ARB_debug_output&generator=c&options=HEADER_ONLY
-   - GLFW 3.4 (dynamically linked)
-   - GLM 1.0.1
-2. Copy the GLAD, GLFW and GLM files into their corresponding new directories:
-   - `include/glad/gl.h`
+1. If you built GLFW from source (e.g. for static linking), copy the header and library files into the following (new) locations:
    - `include/GLFW/glfw3.h`
-   - `include/glm/**/*`
-   - `lib/glfw3.dll`
-   - `lib/glfw3.lib`
-3. Build using **Build** > **Build Solution**.
+   - `lib/libglfw3.a`
+1. Set/`export` the following environment variables, as needed:
+   - For static linking, set `STATIC_BUILD=1`.
+   - For debug builds, set `DEBUG_BUILD=1`.
+1. Compile using `make`.
+1. Run the app using `bin/release/world-3d` (or `bin/debug/world-3d` if `DEBUG_BUILD=1` was set).
