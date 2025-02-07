@@ -9,6 +9,7 @@
 #include <string>
 
 #include "debug.hxx"
+#include "io.hxx"
 #include "window.hxx"
 
 #define GLAD_GL_IMPLEMENTATION
@@ -30,16 +31,6 @@ auto debugMessageCallbackGL(
   LOG_ERROR("GL error: " << message << '\n');
 }
 #endif // DEBUG
-
-auto readFile(const char* const fileName) -> std::string {
-  std::ifstream streamIn{fileName};
-  std::ostringstream streamOut{};
-  std::string s{};
-  while (std::getline(streamIn, s)) {
-    streamOut << s << '\n';
-  }
-  return streamOut.str();
-}
 
 auto createShader(GLenum type, const std::string& source) -> GLuint {
   GLuint shader{glCreateShader(type)};
