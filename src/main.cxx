@@ -1,6 +1,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdlib>
+#include <exception>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -8,6 +9,7 @@
 #include <string>
 
 #include "debug.hxx"
+#include "window.hxx"
 
 #define GLAD_GL_IMPLEMENTATION
 #include <glad/gl.h>
@@ -16,11 +18,7 @@
 #include <glm/glm.hpp>
 
 #ifdef DEBUG
-void errorCallbackGLFW(int /*error*/, const char* description) {
-  LOG_ERROR("GLFW error: " << description << '\n');
-}
-
-void debugMessageCallbackGL(
+auto debugMessageCallbackGL(
   GLenum /*source*/,
   GLenum /*type*/,
   GLuint /*id*/,
@@ -28,25 +26,12 @@ void debugMessageCallbackGL(
   GLsizei /*length*/,
   const GLchar* message,
   const void* /*userParam*/
-) {
+) -> void {
   LOG_ERROR("GL error: " << message << '\n');
 }
-#endif
+#endif // DEBUG
 
-void keyCallback(GLFWwindow *window, int key, int /*scancode*/, int action, int mods) {
-  const int keyUp{action & GLFW_KEY_UP};
-  const bool keyQ{key == GLFW_KEY_Q};
-  const bool keyW{key == GLFW_KEY_W};
-  const bool keyF4{key == GLFW_KEY_F4};
-  const int keyCtrl{mods & GLFW_MOD_CONTROL};
-  const int keyAlt{mods & GLFW_MOD_ALT};
-  if (keyUp && ((keyCtrl && (keyQ || keyW)) || (keyAlt && keyF4))) {
-    glfwSetWindowShouldClose(window, true);
-    return;
-  }
-}
-
-std::string readFile(const char* const fileName) {
+auto readFile(const char* const fileName) -> std::string {
   std::ifstream streamIn{fileName};
   std::ostringstream streamOut{};
   std::string s{};
@@ -56,60 +41,7 @@ std::string readFile(const char* const fileName) {
   return streamOut.str();
 }
 
-constexpr std::tuple<int, int> windowSize{640, 480};
-constexpr std::tuple<int, int> versionOpenGL{3, 3};
-
-GLFWwindow* initializeWindow() {
-  if (!glfwInit()) {
-    LOG_ERROR("GLFW error: Initialization failed\n");
-    return nullptr;
-  }
-#ifdef DEBUG
-  glfwSetErrorCallback(errorCallbackGLFW);
-#endif
-  const auto [windowWidth, windowHeight]{windowSize};
-  const char* windowTitle{"3D Flying Camera Test"};
-  const auto [glMajor, glMinor]{versionOpenGL};
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glMinor);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_DECORATED, true);
-#ifdef DEBUG
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
-#endif
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
-#endif
-  GLFWwindow* window{glfwCreateWindow(
-    windowWidth,
-    windowHeight,
-    windowTitle,
-    nullptr /*monitor*/,
-    nullptr /*share*/
-  )};
-  if (!window) {
-    glfwTerminate();
-    return nullptr;
-  }
-  glfwMakeContextCurrent(window);
-  gladLoadGL(glfwGetProcAddress);
-#ifdef DEBUG
-  if (GLAD_GL_ARB_debug_output) {
-    LOG("GL extension GL_ARB_debug_output available\n");
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-    glDebugMessageCallbackARB(debugMessageCallbackGL, nullptr /*userParam*/);
-  } else {
-    LOG("GL extension GL_ARB_debug_output unavailable\n");
-  }
-#endif
-  LOG("C++ version: " << STRING(__cplusplus) << '\n');
-  LOG("Driver OpenGL version: " << glGetString(GL_VERSION) << '\n');
-  glfwSwapInterval(1);
-  glfwSetKeyCallback(window, keyCallback);
-  return window;
-}
-
-GLuint createShader(GLenum type, const std::string& source) {
+auto createShader(GLenum type, const std::string& source) -> GLuint {
   GLuint shader{glCreateShader(type)};
   std::array<const char*, 1> sources{source.data()};
   glShaderSource(shader, 1, sources.data(), nullptr /*length*/);
@@ -117,7 +49,9 @@ GLuint createShader(GLenum type, const std::string& source) {
   return shader;
 }
 
-GLuint createProgram(const std::string& vertexSource, const std::string& fragmentSource) {
+auto createProgram(
+  const std::string& vertexSource, const std::string& fragmentSource
+) -> GLuint {
   GLuint vertexShader{createShader(GL_VERTEX_SHADER, vertexSource)};
   GLuint fragmentShader{createShader(GL_FRAGMENT_SHADER, fragmentSource)};
   GLuint program{glCreateProgram()};
@@ -172,7 +106,20 @@ struct ProgramData {
     program{program}, vao{vao}, vertexCount{vertexCount} {}
 };
 
-ProgramData initializeGL() {
+auto initializeGraphics() -> ProgramData {
+    gladLoadGL(glfwGetProcAddress);
+#ifdef DEBUG
+  if (GLAD_GL_ARB_debug_output) {
+    LOG("GL extension GL_ARB_debug_output available\n");
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+    glDebugMessageCallbackARB(debugMessageCallbackGL, nullptr /*userParam*/);
+  } else {
+    LOG("GL extension GL_ARB_debug_output unavailable\n");
+  }
+#endif
+  LOG("C++ version: " << STRING(__cplusplus) << '\n');
+  LOG("Driver OpenGL version: " << glGetString(GL_VERSION) << '\n');
+
   // TODO: Implement std::filesystem calls to check for shader file existence.
   std::string vertexSource{readFile("res/shaders/main.vert")};
   std::string fragmentSource{readFile("res/shaders/main.frag")};
@@ -182,36 +129,42 @@ ProgramData initializeGL() {
   return ProgramData{program, vao, 3};
 }
 
-void mainLoop(GLFWwindow* window, const ProgramData& programData) {
-  while (!glfwWindowShouldClose(window)) {
-    int width{};
-    int height{};
-    glfwGetFramebufferSize(window, &width, &height);
-    glViewport(0, 0, width, height);
-    glClearColor(0.f, .5f, 1.f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(programData.program);
-    // OpenGL Core (3.2+) requires explicit binding of a VAO before drawing,
-    // even if no vertex data is being provided to the shaders.
-    glBindVertexArray(programData.vao);
-    glDrawArrays(GL_TRIANGLES, 0, programData.vertexCount);
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-  }
+auto render(WindowHandler& window, const ProgramData& programData) -> void {
+  glViewport(0, 0, window.getWidth(), window.getHeight());
+  glClearColor(0.f, .5f, 1.f, 1.f);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glUseProgram(programData.program);
+  // OpenGL Core (3.2+) requires explicit binding of a VAO before drawing,
+  // even if no vertex data is being provided to the shaders.
+  glBindVertexArray(programData.vao);
+  glDrawArrays(GL_TRIANGLES, 0, programData.vertexCount);
 }
 
-void cleanUp(GLFWwindow* window, ProgramData& programData) {
-  glfwDestroyWindow(window);
+auto cleanUp(ProgramData& programData) -> void {
   glDeleteVertexArrays(1, &programData.vao);
-  glfwTerminate();
 }
 
-int main(int /*argc*/, char** /*argv*/) {
-  GLFWwindow* window{initializeWindow()};
-  if (window == nullptr) {
+auto main(int /*argc*/, char** /*argv*/) -> int {
+  try {
+    WindowHandler window{};
+    ProgramData programData{initializeGraphics()};
+    while (window.isActive()) {
+      const WindowActions& actions{window.getActions()};
+      if (actions.close) {
+        window.close();
+        break;
+      }
+      if (actions.resetSize) {
+        window.resetSize();
+      }
+      window.resetActions();
+      window.preRender();
+      render(window, programData);
+      window.postRender();
+    }
+    cleanUp(programData);
+  } catch (std::exception& ex) {
+    std::cerr << ex.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  ProgramData programData{initializeGL()};
-  mainLoop(window, programData);
-  cleanUp(window, programData);
 }
