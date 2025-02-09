@@ -1,7 +1,9 @@
 #include "graphics.hxx"
 
 #include <array>
+#include <initializer_list>
 #include <stdexcept>
+#include <string>
 
 #define GLAD_GL_IMPLEMENTATION
 #include <glad/gl.h>
@@ -13,6 +15,16 @@
 /*
  * Declarations.
  */
+
+struct ShaderAttribute {
+  std::string name;
+  GLuint buffer;
+  GLint size;
+  GLenum type;
+  GLboolean normalized;
+  GLsizei stride;
+  GLvoid *pointer;
+};
 
 #ifdef DEBUG
 static auto debugMessageCallbackGL(
@@ -28,6 +40,11 @@ static auto createProgram(
 template<typename T>
 static auto createBuffer(
   GLenum target, const T& data, GLenum usage = GL_STATIC_DRAW
+) -> GLuint;
+static auto createVertexArray(
+  GLuint program,
+  std::initializer_list<ShaderAttribute> attributes,
+  GLuint indexBuffer
 ) -> GLuint;
 static auto createShaderData(
   std::string_view vertexSource, std::string_view fragmentSource
@@ -180,6 +197,34 @@ auto createBuffer(GLenum target, const T& data, GLenum usage) -> GLuint {
   return buffer;
 }
 
+auto createVertexArray(
+  GLuint program,
+  std::initializer_list<ShaderAttribute> attributes,
+  GLuint indexBuffer
+) -> GLuint {
+  GLuint vao{};
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+
+  for (const auto& attribute : attributes) {
+    const GLint location{glGetAttribLocation(program, attribute.name.c_str())};
+    glBindBuffer(GL_ARRAY_BUFFER, attribute.buffer);
+    glVertexAttribPointer(
+      location, attribute.size, attribute.type,
+      attribute.normalized, attribute.stride, attribute.pointer
+    );
+    glEnableVertexAttribArray(location);
+  }
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+  return vao;
+}
+
 auto createShaderData(
   std::string_view vertexSource, std::string_view fragmentSource
 ) -> std::optional<ShaderData> {
@@ -189,10 +234,6 @@ auto createShaderData(
   if (!program) {
     return {};
   }
-
-  GLuint vao{};
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
 
   const std::array<GLfloat, 3*3> vertices{
     1., -1., 0.,
@@ -207,27 +248,18 @@ auto createShaderData(
   const std::array<GLushort, 3*1> indices{
     0, 1, 2
   };
+  const ShaderAttribute positionAttribute{
+    "position", createBuffer(GL_ARRAY_BUFFER, vertices),
+    3, GL_FLOAT, false, 0, nullptr
+  };
+  const ShaderAttribute colorAttribute{
+    "color", createBuffer(GL_ARRAY_BUFFER, colors),
+    3, GL_FLOAT, false, 0, nullptr
+  };
+  const GLuint indexBuffer{createBuffer(GL_ELEMENT_ARRAY_BUFFER, indices)};
+  const GLuint vao{createVertexArray(
+    *program, {positionAttribute, colorAttribute}, indexBuffer
+  )};
 
-  GLuint vertexBuffer{createBuffer(GL_ARRAY_BUFFER, vertices)};
-  GLuint colorBuffer{createBuffer(GL_ARRAY_BUFFER, colors)};
-  GLuint indexBuffer{createBuffer(GL_ELEMENT_ARRAY_BUFFER, indices)};
-  // createBuffer(...) unbinds the buffer before returning, but we need the IBO
-  // to be bound until we unbind the VAO.
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-  const GLint positionLocation{glGetAttribLocation(*program, "position")};
-  const GLint colorLocation{glGetAttribLocation(*program, "color")};
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  glVertexAttribPointer(positionLocation, 3, GL_FLOAT, false, 0, 0);
-  glEnableVertexAttribArray(positionLocation);
-
-  glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-  glVertexAttribPointer(colorLocation, 3, GL_FLOAT, false, 0, 0);
-  glEnableVertexAttribArray(colorLocation);
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   return {{*program, vao, 3}};
 }
