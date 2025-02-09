@@ -45,6 +45,10 @@ private:
     std::string_view vertexSource,
     std::string_view fragmentSource
   ) -> std::optional<GLuint>;
+  template<typename T>
+  static auto createBuffer(
+    GLenum target, const T& data, GLenum usage = GL_STATIC_DRAW
+  ) -> GLuint;
   static auto createShaderData(
     std::string_view vertexSource,
     std::string_view fragmentSource
@@ -55,6 +59,18 @@ private:
   std::vector<ShaderData> _shaderDatas{};
 };
 
-
+template<typename T>
+auto GraphicsEngine::createBuffer(
+  GLenum target, const T& data, GLenum usage
+) -> GLuint {
+  GLuint buffer;
+  glGenBuffers(1, &buffer);
+  glBindBuffer(target, buffer);
+  glBufferData(
+    target, sizeof(typename T::value_type)*data.size(), data.data(), usage
+  );
+  glBindBuffer(target, 0);
+  return buffer;
+}
 
 #endif // GRAPHICS_HXX

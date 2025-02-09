@@ -176,29 +176,12 @@ auto GraphicsEngine::createShaderData(
     0, 1, 2
   };
 
-  GLuint vertexBuffer;
-  glGenBuffers(1, &vertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  glBufferData(
-    GL_ARRAY_BUFFER, sizeof(GLfloat)*vertices.size(),
-    vertices.data(), GL_STATIC_DRAW
-  );
-
-  GLuint colorBuffer;
-  glGenBuffers(1, &colorBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-  glBufferData(
-    GL_ARRAY_BUFFER, sizeof(GLfloat)*colors.size(),
-    colors.data(), GL_STATIC_DRAW
-  );
-
-  GLuint indexBuffer;
-  glGenBuffers(1, &indexBuffer);
+  GLuint vertexBuffer{createBuffer(GL_ARRAY_BUFFER, vertices)};
+  GLuint colorBuffer{createBuffer(GL_ARRAY_BUFFER, colors)};
+  GLuint indexBuffer{createBuffer(GL_ELEMENT_ARRAY_BUFFER, indices)};
+  // createBuffer(...) unbinds the buffer before returning, but we need the IBO
+  // to be bound until we unbind the VAO.
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-  glBufferData(
-    GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort)*indices.size(),
-    indices.data(), GL_STATIC_DRAW
-  );
 
   const GLint positionLocation{glGetAttribLocation(*program, "position")};
   const GLint colorLocation{glGetAttribLocation(*program, "color")};
