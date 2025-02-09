@@ -1,7 +1,9 @@
 #include "graphics.hxx"
 
 #include <array>
+#include <initializer_list>
 #include <stdexcept>
+#include <string>
 
 #define GLAD_GL_IMPLEMENTATION
 #include <glad/gl.h>
@@ -10,24 +12,63 @@
 
 #include "debug.hxx"
 
-namespace {
+/*
+ * Declarations.
+ */
+
+struct ShaderAttribute {
+  std::string name;
+  GLuint buffer;
+  GLint size;
+  GLenum type;
+  GLboolean normalized;
+  GLsizei stride;
+  GLvoid *pointer;
+};
+
 #ifdef DEBUG
-  auto debugMessageCallbackGL(
-    GLenum /*source*/, GLenum /*type*/, GLuint /*id*/, GLenum /*severity*/,
-    GLsizei /*length*/, const GLchar* message, const void* /*userParam*/
-  ) -> void {
-    LOG_ERROR("GL error: " << message << '\n');
-  }
-#endif
+static auto debugMessageCallbackGL(
+  GLenum source, GLenum type, GLuint id, GLenum severity,
+  GLsizei length, const GLchar* message, const void* userParam
+) -> void;
+#endif // DEBUG
+static auto initializeGL() -> bool;
+static auto createShader(GLenum type, std::string_view source) -> GLuint;
+static auto createProgram(
+  std::string_view vertexSource, std::string_view fragmentSource
+) -> std::optional<GLuint>;
+template<typename T>
+static auto createBuffer(
+  GLenum target, const T& data, GLenum usage = GL_STATIC_DRAW
+) -> GLuint;
+static auto createVertexArray(
+  GLuint program,
+  std::initializer_list<ShaderAttribute> attributes,
+  GLuint indexBuffer
+) -> GLuint;
+static auto createShaderData(
+  std::string_view vertexSource, std::string_view fragmentSource
+) -> std::optional<ShaderData>;
+
+/*
+ * Definitions.
+ */
+
+#ifdef DEBUG
+auto debugMessageCallbackGL(
+  GLenum /*source*/, GLenum /*type*/, GLuint /*id*/, GLenum /*severity*/,
+  GLsizei /*length*/, const GLchar* message, const void* /*userParam*/
+) -> void {
+  LOG_ERROR("GL error: " << message << '\n');
 }
+#endif // DEBUG
 
 ShaderData::ShaderData(
   GLuint program_, GLuint vao_, GLsizei indexCount_
 ) : program{program_}, vao{vao_}, indexCount{indexCount_} {}
 
 GraphicsEngine::GraphicsEngine(
-  std::string_view vertexSource,
-  std::string_view fragmentSource
+  std::string_view vertexSource, std::string_view fragmentSource
 ) {
   if (!initializeGL()) {
     throw std::runtime_error{"Failed to initialize OpenGL"};
@@ -46,25 +87,6 @@ GraphicsEngine::~GraphicsEngine() {
     glDeleteVertexArrays(1, &shaderData.vao);
     glDeleteProgram(shaderData.program);
   }
-}
-
-auto GraphicsEngine::initializeGL() -> bool {
-  if (!gladLoadGL(glfwGetProcAddress)) {
-    return false;
-  }
-#ifdef DEBUG
-  if (GLAD_GL_ARB_debug_output) {
-    LOG("GL extension GL_ARB_debug_output available\n");
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-    glDebugMessageCallbackARB(debugMessageCallbackGL, nullptr /*userParam*/);
-  }
-  else {
-    LOG("GL extension GL_ARB_debug_output unavailable\n");
-  }
-#endif
-  LOG("C++ version: " << STRING(__cplusplus) << '\n');
-  LOG("Driver OpenGL version: " << glGetString(GL_VERSION) << '\n');
-  return true;
 }
 
 auto GraphicsEngine::resize(int width, int height) -> void {
@@ -86,9 +108,26 @@ auto GraphicsEngine::render() -> void {
   }
 }
 
-auto GraphicsEngine::createShader(
-  GLenum type, std::string_view source
-) -> GLuint {
+auto initializeGL() -> bool {
+  if (!gladLoadGL(glfwGetProcAddress)) {
+    return false;
+  }
+#ifdef DEBUG
+  if (GLAD_GL_ARB_debug_output) {
+    LOG("GL extension GL_ARB_debug_output available\n");
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+    glDebugMessageCallbackARB(debugMessageCallbackGL, nullptr /*userParam*/);
+  }
+  else {
+    LOG("GL extension GL_ARB_debug_output unavailable\n");
+  }
+#endif
+  LOG("C++ version: " << STRING(__cplusplus) << '\n');
+  LOG("Driver OpenGL version: " << glGetString(GL_VERSION) << '\n');
+  return true;
+}
+
+auto createShader(GLenum type, std::string_view source) -> GLuint {
   GLuint shader{glCreateShader(type)};
   const GLchar* sources[]{source.data()};
   const GLint lengths[]{static_cast<GLint>(source.size())};
@@ -97,9 +136,8 @@ auto GraphicsEngine::createShader(
   return shader;
 }
 
-auto GraphicsEngine::createProgram(
-  std::string_view vertexSource,
-  std::string_view fragmentSource
+auto createProgram(
+  std::string_view vertexSource, std::string_view fragmentSource
 ) -> std::optional<GLuint> {
   GLuint vertexShader{createShader(GL_VERTEX_SHADER, vertexSource)};
   GLuint fragmentShader{createShader(GL_FRAGMENT_SHADER, fragmentSource)};
@@ -147,9 +185,48 @@ auto GraphicsEngine::createProgram(
   return program;
 }
 
-auto GraphicsEngine::createShaderData(
-  std::string_view vertexSource,
-  std::string_view fragmentSource
+template<typename T>
+auto createBuffer(GLenum target, const T& data, GLenum usage) -> GLuint {
+  GLuint buffer;
+  glGenBuffers(1, &buffer);
+  glBindBuffer(target, buffer);
+  glBufferData(
+    target, sizeof(typename T::value_type)*data.size(), data.data(), usage
+  );
+  glBindBuffer(target, 0);
+  return buffer;
+}
+
+auto createVertexArray(
+  GLuint program,
+  std::initializer_list<ShaderAttribute> attributes,
+  GLuint indexBuffer
+) -> GLuint {
+  GLuint vao{};
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+
+  for (const auto& attribute : attributes) {
+    const GLint location{glGetAttribLocation(program, attribute.name.c_str())};
+    glBindBuffer(GL_ARRAY_BUFFER, attribute.buffer);
+    glVertexAttribPointer(
+      location, attribute.size, attribute.type,
+      attribute.normalized, attribute.stride, attribute.pointer
+    );
+    glEnableVertexAttribArray(location);
+  }
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+  return vao;
+}
+
+auto createShaderData(
+  std::string_view vertexSource, std::string_view fragmentSource
 ) -> std::optional<ShaderData> {
   const std::optional<GLuint> program{
     createProgram(vertexSource, fragmentSource)
@@ -157,10 +234,6 @@ auto GraphicsEngine::createShaderData(
   if (!program) {
     return {};
   }
-
-  GLuint vao{};
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
 
   const std::array<GLfloat, 3*3> vertices{
     1., -1., 0.,
@@ -175,45 +248,18 @@ auto GraphicsEngine::createShaderData(
   const std::array<GLushort, 3*1> indices{
     0, 1, 2
   };
+  const ShaderAttribute positionAttribute{
+    "position", createBuffer(GL_ARRAY_BUFFER, vertices),
+    3, GL_FLOAT, false, 0, nullptr
+  };
+  const ShaderAttribute colorAttribute{
+    "color", createBuffer(GL_ARRAY_BUFFER, colors),
+    3, GL_FLOAT, false, 0, nullptr
+  };
+  const GLuint indexBuffer{createBuffer(GL_ELEMENT_ARRAY_BUFFER, indices)};
+  const GLuint vao{createVertexArray(
+    *program, {positionAttribute, colorAttribute}, indexBuffer
+  )};
 
-  GLuint vertexBuffer;
-  glGenBuffers(1, &vertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  glBufferData(
-    GL_ARRAY_BUFFER, sizeof(GLfloat)*vertices.size(),
-    vertices.data(), GL_STATIC_DRAW
-  );
-
-  GLuint colorBuffer;
-  glGenBuffers(1, &colorBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-  glBufferData(
-    GL_ARRAY_BUFFER, sizeof(GLfloat)*colors.size(),
-    colors.data(), GL_STATIC_DRAW
-  );
-
-  GLuint indexBuffer;
-  glGenBuffers(1, &indexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-  glBufferData(
-    GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort)*indices.size(),
-    indices.data(), GL_STATIC_DRAW
-  );
-
-  const GLint positionLocation{glGetAttribLocation(*program, "position")};
-  const GLint colorLocation{glGetAttribLocation(*program, "color")};
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  glVertexAttribPointer(positionLocation, 3, GL_FLOAT, false, 0, 0);
-  glEnableVertexAttribArray(positionLocation);
-
-  glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-  glVertexAttribPointer(colorLocation, 3, GL_FLOAT, false, 0, 0);
-  glEnableVertexAttribArray(colorLocation);
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   return {{*program, vao, 3}};
 }
-
