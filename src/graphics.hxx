@@ -30,7 +30,7 @@ public:
   GraphicsEngine(GraphicsEngine&&) = delete;
   GraphicsEngine& operator=(const GraphicsEngine&) = delete;
   GraphicsEngine& operator=(GraphicsEngine&&) = delete;
-  ~GraphicsEngine();
+  ~GraphicsEngine() noexcept;
 
   auto resize(int width, int height) -> void;
   auto render() -> void;

@@ -18,7 +18,7 @@ public:
   WindowHandler(WindowHandler&&) = delete;
   WindowHandler operator=(const WindowHandler&) = delete;
   WindowHandler operator=(WindowHandler&&) = delete;
-  ~WindowHandler();
+  ~WindowHandler() noexcept;
 
   auto getWindow() -> GLFWwindow*;
   auto getActions() const -> const WindowActions&;
