@@ -34,7 +34,7 @@ struct ShaderAttribute {
   ShaderAttribute(ShaderAttribute&&) = default;
   ShaderAttribute& operator=(const ShaderAttribute&) = default;
   ShaderAttribute& operator=(ShaderAttribute&&) = default;
-  ~ShaderAttribute() = default;
+  ~ShaderAttribute() noexcept = default;
 };
 
 #ifdef DEBUG
