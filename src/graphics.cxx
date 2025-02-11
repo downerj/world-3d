@@ -23,7 +23,18 @@ struct ShaderAttribute {
   GLenum type;
   GLboolean normalized;
   GLsizei stride;
-  GLvoid *pointer;
+  GLvoid* pointer;
+
+  ShaderAttribute(
+    std::string name, GLuint buffer, GLint size, GLenum type,
+    GLboolean normalized, GLsizei stride, GLvoid* pointer
+  );
+  ShaderAttribute() = delete;
+  ShaderAttribute(const ShaderAttribute&) = default;
+  ShaderAttribute(ShaderAttribute&&) = default;
+  ShaderAttribute& operator=(const ShaderAttribute&) = default;
+  ShaderAttribute& operator=(ShaderAttribute&&) = default;
+  ~ShaderAttribute() = default;
 };
 
 #ifdef DEBUG
@@ -53,6 +64,12 @@ static auto createShaderData(
 /*
  * Definitions.
  */
+
+ShaderAttribute::ShaderAttribute(
+  std::string name_, GLuint buffer_, GLint size_, GLenum type_,
+  GLboolean normalized_, GLsizei stride_, GLvoid* pointer_
+) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
+    normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
 
 #ifdef DEBUG
 auto debugMessageCallbackGL(
