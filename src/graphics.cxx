@@ -2,6 +2,7 @@
 
 #include <array>
 #include <initializer_list>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -11,6 +12,7 @@
 #include <GLFW/glfw3.h>
 
 #include "debug.hxx"
+#include "models.hxx"
 
 /*
  * Declarations.
@@ -50,7 +52,7 @@ static auto createProgram(
 ) -> std::optional<GLuint>;
 template<typename T>
 static auto createBuffer(
-  GLenum target, const T& data, GLenum usage = GL_STATIC_DRAW
+  GLenum target, const T* data, GLsizei size, GLenum usage = GL_STATIC_DRAW
 ) -> GLuint;
 static auto createVertexArray(
   GLuint program,
@@ -58,7 +60,8 @@ static auto createVertexArray(
   GLuint indexBuffer
 ) -> GLuint;
 static auto createShaderData(
-  std::string_view vertexSource, std::string_view fragmentSource
+  std::string_view vertexSource, std::string_view fragmentSource,
+  const Geometry& geometry
 ) -> std::optional<ShaderData>;
 
 /*
@@ -90,8 +93,9 @@ GraphicsEngine::GraphicsEngine(
   if (!initializeGL()) {
     throw std::runtime_error{"Failed to initialize OpenGL"};
   }
+  const std::unique_ptr<Geometry> geometry{std::make_unique<BasicTriangle>()};
   std::optional<ShaderData> shaderData{createShaderData(
-    vertexSource, fragmentSource
+    vertexSource, fragmentSource, *geometry
   )};
   if (!shaderData) {
     throw std::runtime_error{"Failed to create shader program"};
@@ -203,13 +207,13 @@ auto createProgram(
 }
 
 template<typename T>
-auto createBuffer(GLenum target, const T& data, GLenum usage) -> GLuint {
+auto createBuffer(
+  GLenum target, const T* data, GLsizei size, GLenum usage
+) -> GLuint {
   GLuint buffer;
   glGenBuffers(1, &buffer);
   glBindBuffer(target, buffer);
-  glBufferData(
-    target, sizeof(typename T::value_type)*data.size(), data.data(), usage
-  );
+  glBufferData(target, size, data, usage);
   glBindBuffer(target, 0);
   return buffer;
 }
@@ -243,7 +247,8 @@ auto createVertexArray(
 }
 
 auto createShaderData(
-  std::string_view vertexSource, std::string_view fragmentSource
+  std::string_view vertexSource, std::string_view fragmentSource,
+  const Geometry& geometry
 ) -> std::optional<ShaderData> {
   const std::optional<GLuint> program{
     createProgram(vertexSource, fragmentSource)
@@ -252,31 +257,29 @@ auto createShaderData(
     return {};
   }
 
-  const std::array<GLfloat, 3*3> vertices{
-    1., -1., 0.,
-    -1., -1., 0.,
-    0., 1., 0.,
-  };
-  const std::array<GLfloat, 3*3> colors{
-    1., 0., 0.,
-    0., 1., 0.,
-    0., 0., 1.
-  };
-  const std::array<GLushort, 3*1> indices{
-    0, 1, 2
-  };
+  const GLuint positionBuffer{createBuffer(
+    GL_ARRAY_BUFFER, geometry.getVertices(),
+    sizeof(float)*geometry.getVertexCount()
+  )};
   const ShaderAttribute positionAttribute{
-    "position", createBuffer(GL_ARRAY_BUFFER, vertices),
-    3, GL_FLOAT, false, 0, nullptr
+    "position", positionBuffer, geometry.getVertexCount()/3,
+    GL_FLOAT, false, 0, nullptr
   };
+  const GLuint colorBuffer{createBuffer(
+    GL_ARRAY_BUFFER, geometry.getColors(),
+    sizeof(float)*geometry.getColorCount()
+  )};
   const ShaderAttribute colorAttribute{
-    "color", createBuffer(GL_ARRAY_BUFFER, colors),
-    3, GL_FLOAT, false, 0, nullptr
+    "color", colorBuffer, geometry.getColorCount()/3,
+    GL_FLOAT, false, 0, nullptr
   };
-  const GLuint indexBuffer{createBuffer(GL_ELEMENT_ARRAY_BUFFER, indices)};
+  const GLuint indexBuffer{createBuffer(
+    GL_ELEMENT_ARRAY_BUFFER, geometry.getIndices(),
+    sizeof(unsigned short)*geometry.getIndexCount()
+  )};
   const GLuint vao{createVertexArray(
     *program, {positionAttribute, colorAttribute}, indexBuffer
   )};
 
-  return {{*program, vao, 3}};
+  return {{*program, vao, geometry.getIndexCount()}};
 }
