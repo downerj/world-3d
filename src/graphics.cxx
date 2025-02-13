@@ -18,6 +18,8 @@
  * Declarations.
  */
 
+namespace {
+
 struct ShaderAttribute {
   std::string name;
   GLuint buffer;
@@ -40,29 +42,31 @@ struct ShaderAttribute {
 };
 
 #ifdef DEBUG
-static auto debugMessageCallbackGL(
+auto debugMessageCallbackGL(
   GLenum source, GLenum type, GLuint id, GLenum severity,
   GLsizei length, const GLchar* message, const void* userParam
 ) -> void;
 #endif // DEBUG
-static auto initializeGL() -> bool;
-static auto createShader(GLenum type, std::string_view source) -> GLuint;
-static auto createProgram(
+auto initializeGL() -> bool;
+auto createShader(GLenum type, std::string_view source) -> GLuint;
+auto createProgram(
   std::string_view vertexSource, std::string_view fragmentSource
 ) -> std::optional<GLuint>;
 template<typename T>
-static auto createBuffer(
+auto createBuffer(
   GLenum target, const T* data, GLsizei size, GLenum usage = GL_STATIC_DRAW
 ) -> GLuint;
-static auto createVertexArray(
+auto createVertexArray(
   GLuint program,
   std::initializer_list<ShaderAttribute> attributes,
   GLuint indexBuffer
 ) -> GLuint;
-static auto createShaderData(
+auto createShaderData(
   std::string_view vertexSource, std::string_view fragmentSource,
   const Geometry& geometry
 ) -> std::optional<ShaderData>;
+
+} // namespace
 
 /*
  * Definitions.
@@ -74,15 +78,6 @@ ShaderAttribute::ShaderAttribute(
 ) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
     normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
 
-#ifdef DEBUG
-auto debugMessageCallbackGL(
-  GLenum /*source*/, GLenum /*type*/, GLuint /*id*/, GLenum /*severity*/,
-  GLsizei /*length*/, const GLchar* message, const void* /*userParam*/
-) -> void {
-  LOG_ERROR("GL error: " << message << '\n');
-}
-#endif // DEBUG
-
 ShaderData::ShaderData(
   GLuint program_, GLuint vao_, GLsizei indexCount_
 ) : program{program_}, vao{vao_}, indexCount{indexCount_} {}
@@ -90,11 +85,11 @@ ShaderData::ShaderData(
 GraphicsEngine::GraphicsEngine(
   std::string_view vertexSource, std::string_view fragmentSource
 ) {
-  if (!initializeGL()) {
+  if (!::initializeGL()) {
     throw std::runtime_error{"Failed to initialize OpenGL"};
   }
   const std::unique_ptr<Geometry> geometry{std::make_unique<BasicTriangle>()};
-  std::optional<ShaderData> shaderData{createShaderData(
+  std::optional<ShaderData> shaderData{::createShaderData(
     vertexSource, fragmentSource, *geometry
   )};
   if (!shaderData) {
@@ -129,6 +124,17 @@ auto GraphicsEngine::render() -> void {
   }
 }
 
+namespace {
+
+#ifdef DEBUG
+auto debugMessageCallbackGL(
+  GLenum /*source*/, GLenum /*type*/, GLuint /*id*/, GLenum /*severity*/,
+  GLsizei /*length*/, const GLchar* message, const void* /*userParam*/
+) -> void {
+  LOG_ERROR("GL error: " << message << '\n');
+}
+#endif // DEBUG
+
 auto initializeGL() -> bool {
   if (!gladLoadGL(glfwGetProcAddress)) {
     return false;
@@ -137,7 +143,7 @@ auto initializeGL() -> bool {
   if (GLAD_GL_ARB_debug_output) {
     LOG("GL extension GL_ARB_debug_output available\n");
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-    glDebugMessageCallbackARB(debugMessageCallbackGL, nullptr /*userParam*/);
+    glDebugMessageCallbackARB(::debugMessageCallbackGL, nullptr /*userParam*/);
   }
   else {
     LOG("GL extension GL_ARB_debug_output unavailable\n");
@@ -160,8 +166,8 @@ auto createShader(GLenum type, std::string_view source) -> GLuint {
 auto createProgram(
   std::string_view vertexSource, std::string_view fragmentSource
 ) -> std::optional<GLuint> {
-  GLuint vertexShader{createShader(GL_VERTEX_SHADER, vertexSource)};
-  GLuint fragmentShader{createShader(GL_FRAGMENT_SHADER, fragmentSource)};
+  GLuint vertexShader{::createShader(GL_VERTEX_SHADER, vertexSource)};
+  GLuint fragmentShader{::createShader(GL_FRAGMENT_SHADER, fragmentSource)};
   GLuint program{glCreateProgram()};
   glAttachShader(program, vertexShader);
   glAttachShader(program, fragmentShader);
@@ -251,7 +257,7 @@ auto createShaderData(
   const Geometry& geometry
 ) -> std::optional<ShaderData> {
   const std::optional<GLuint> program{
-    createProgram(vertexSource, fragmentSource)
+    ::createProgram(vertexSource, fragmentSource)
   };
   if (!program) {
     return {};
@@ -277,9 +283,11 @@ auto createShaderData(
     GL_ELEMENT_ARRAY_BUFFER, geometry.getIndices(),
     sizeof(unsigned short)*geometry.getIndexCount()
   )};
-  const GLuint vao{createVertexArray(
+  const GLuint vao{::createVertexArray(
     *program, {positionAttribute, colorAttribute}, indexBuffer
   )};
 
   return {{*program, vao, geometry.getIndexCount()}};
 }
+
+} // namespace
