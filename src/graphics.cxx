@@ -12,6 +12,7 @@
 #include <GLFW/glfw3.h>
 
 #include "debug.hxx"
+#include "io.hxx"
 #include "models.hxx"
 
 /*
@@ -20,27 +21,6 @@
 
 namespace {
 
-struct ShaderAttribute {
-  std::string name;
-  GLuint buffer;
-  GLint size;
-  GLenum type;
-  GLboolean normalized;
-  GLsizei stride;
-  GLvoid* pointer;
-
-  ShaderAttribute(
-    std::string name, GLuint buffer, GLint size, GLenum type,
-    GLboolean normalized, GLsizei stride, GLvoid* pointer
-  );
-  ShaderAttribute() = delete;
-  ShaderAttribute(const ShaderAttribute&) = default;
-  ShaderAttribute(ShaderAttribute&&) = default;
-  ShaderAttribute& operator=(const ShaderAttribute&) = default;
-  ShaderAttribute& operator=(ShaderAttribute&&) = default;
-  ~ShaderAttribute() noexcept = default;
-};
-
 #ifdef DEBUG
 auto debugMessageCallbackGL(
   GLenum source, GLenum type, GLuint id, GLenum severity,
@@ -48,23 +28,6 @@ auto debugMessageCallbackGL(
 ) -> void;
 #endif // DEBUG
 auto initializeGL() -> bool;
-auto createShader(GLenum type, std::string_view source) -> GLuint;
-auto createProgram(
-  std::string_view vertexSource, std::string_view fragmentSource
-) -> std::optional<GLuint>;
-template<typename T>
-auto createBuffer(
-  GLenum target, const T* data, GLsizei size, GLenum usage = GL_STATIC_DRAW
-) -> GLuint;
-auto createVertexArray(
-  GLuint program,
-  std::initializer_list<ShaderAttribute> attributes,
-  GLuint indexBuffer
-) -> GLuint;
-auto createShaderData(
-  std::string_view vertexSource, std::string_view fragmentSource,
-  const Geometry& geometry
-) -> std::optional<ShaderData>;
 
 } // namespace
 
@@ -72,36 +35,57 @@ auto createShaderData(
  * Definitions.
  */
 
-ShaderAttribute::ShaderAttribute(
-  std::string name_, GLuint buffer_, GLint size_, GLenum type_,
-  GLboolean normalized_, GLsizei stride_, GLvoid* pointer_
-) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
-    normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
-
-ShaderData::ShaderData(
-  GLuint program_, GLuint vao_, GLsizei indexCount_
-) : program{program_}, vao{vao_}, indexCount{indexCount_} {}
-
-GraphicsEngine::GraphicsEngine(
-  std::string_view vertexSource, std::string_view fragmentSource
-) {
+GraphicsEngine::GraphicsEngine() {
   if (!initializeGL()) {
     throw std::runtime_error{"Failed to initialize OpenGL"};
   }
+
   const std::unique_ptr<Geometry> geometry{std::make_unique<BasicTriangle>()};
-  std::optional<ShaderData> shaderData{createShaderData(
-    vertexSource, fragmentSource, *geometry
+  std::optional<std::string> vertexSource{readFile(
+    "res/shaders/main.vert"
   )};
-  if (!shaderData) {
-    throw std::runtime_error{"Failed to create shader program"};
+  std::optional<std::string> fragmentSource{readFile(
+    "res/shaders/main.frag"
+  )};
+  if (!vertexSource || !fragmentSource) {
+    throw std::runtime_error{"Failed to load shader sources"};
   }
-  _shaderDatas.push_back(*shaderData);
+  Shader vertexShader{ShaderType::Vertex, *vertexSource};
+  Shader fragmentShader{ShaderType::Fragment, *fragmentSource};
+  ShaderProgram program{vertexShader, fragmentShader};
+  const Buffer positionBuffer{
+    BufferTarget::Array, geometry->getVertices(),
+    sizeof(float)*geometry->getVertexCount(), BufferUsage::StaticDraw
+  };
+  const ShaderAttribute positionAttribute{
+    "position", positionBuffer, geometry->getVertexCount()/3,
+    AttributeType::Float, false, 0, nullptr
+  };
+  const Buffer colorBuffer{
+    BufferTarget::Array, geometry->getColors(),
+    sizeof(float)*geometry->getColorCount(), BufferUsage::StaticDraw
+  };
+  const ShaderAttribute colorAttribute{
+    "color", colorBuffer, geometry->getColorCount()/3,
+    AttributeType::Float, false, 0, nullptr
+  };
+  const Buffer indexBuffer{
+    BufferTarget::ElementArray, geometry->getIndices(),
+    sizeof(unsigned short)*geometry->getIndexCount(), BufferUsage::StaticDraw
+  };
+  VertexArray vertexArray{
+    program, {positionAttribute, colorAttribute}, indexBuffer,
+    geometry->getIndexCount()
+  };
+  program.addVertexArray(vertexArray);
+  vertexShader.cleanup();
+  fragmentShader.cleanup();
+  _programs.push_back(program);
 }
 
 GraphicsEngine::~GraphicsEngine() {
-  for (const auto& shaderData : _shaderDatas) {
-    glDeleteVertexArrays(1, &shaderData.vao);
-    glDeleteProgram(shaderData.program);
+  for (auto& program : _programs) {
+    program.cleanup();
   }
 }
 
@@ -114,13 +98,15 @@ auto GraphicsEngine::render() -> void {
   glViewport(0, 0, _windowWidth, _windowHeight);
   glClearColor(0., .5, 1., 1.);
   glClear(GL_COLOR_BUFFER_BIT);
-  for (const auto& shaderData : _shaderDatas) {
-    glUseProgram(shaderData.program);
-    glBindVertexArray(shaderData.vao);
-    glDrawElements(
-      GL_TRIANGLES, shaderData.indexCount, GL_UNSIGNED_SHORT, nullptr
-    );
-    glBindVertexArray(0);
+  for (const auto& program : _programs) {
+    program.use();
+    for (const auto& vao : program.getVertexArrays()) {
+      vao.bind();
+      glDrawElements(
+        GL_TRIANGLES, vao.getIndexCount(), GL_UNSIGNED_SHORT, nullptr
+      );
+      vao.unbind();
+    }
   }
 }
 
@@ -152,142 +138,6 @@ auto initializeGL() -> bool {
   LOG("C++ version: " << STRING(__cplusplus) << '\n');
   LOG("Driver OpenGL version: " << glGetString(GL_VERSION) << '\n');
   return true;
-}
-
-auto createShader(GLenum type, std::string_view source) -> GLuint {
-  GLuint shader{glCreateShader(type)};
-  const GLchar* sources[]{source.data()};
-  const GLint lengths[]{static_cast<GLint>(source.size())};
-  glShaderSource(shader, 1, sources, lengths);
-  glCompileShader(shader);
-  return shader;
-}
-
-auto createProgram(
-  std::string_view vertexSource, std::string_view fragmentSource
-) -> std::optional<GLuint> {
-  GLuint vertexShader{createShader(GL_VERTEX_SHADER, vertexSource)};
-  GLuint fragmentShader{createShader(GL_FRAGMENT_SHADER, fragmentSource)};
-  GLuint program{glCreateProgram()};
-  glAttachShader(program, vertexShader);
-  glAttachShader(program, fragmentShader);
-  glLinkProgram(program);
-  GLint status{};
-  glGetProgramiv(program, GL_LINK_STATUS, &status);
-#ifdef DEBUG
-  if (!status) {
-    GLsizei logLength{};
-    std::string log{};
-
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
-    log.resize(logLength);
-    glGetProgramInfoLog(program, logLength, nullptr, log.data());
-    std::cerr << "GL program error: " << log << '\n';
-    log.clear();
-
-    glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-      log.resize(logLength);
-      glGetShaderInfoLog(vertexShader, logLength, nullptr, log.data());
-      std::cerr << "GL vertex shader error: " << log << '\n';
-      log.clear();
-    }
-
-    glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-      log.resize(logLength);
-      glGetShaderInfoLog(fragmentShader, logLength, nullptr, log.data());
-      std::cerr << "GL fragment shader error: " << log << '\n';
-      log.clear();
-    }
-  }
-#endif // DEBUG
-  glDetachShader(program, vertexShader);
-  glDetachShader(program, fragmentShader);
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
-  if (!status) {
-    return {};
-  }
-  return program;
-}
-
-template<typename T>
-auto createBuffer(
-  GLenum target, const T* data, GLsizei size, GLenum usage
-) -> GLuint {
-  GLuint buffer;
-  glGenBuffers(1, &buffer);
-  glBindBuffer(target, buffer);
-  glBufferData(target, size, data, usage);
-  glBindBuffer(target, 0);
-  return buffer;
-}
-
-auto createVertexArray(
-  GLuint program,
-  std::initializer_list<ShaderAttribute> attributes,
-  GLuint indexBuffer
-) -> GLuint {
-  GLuint vao{};
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-
-  for (const auto& attribute : attributes) {
-    const GLint location{glGetAttribLocation(program, attribute.name.c_str())};
-    glBindBuffer(GL_ARRAY_BUFFER, attribute.buffer);
-    glVertexAttribPointer(
-      location, attribute.size, attribute.type,
-      attribute.normalized, attribute.stride, attribute.pointer
-    );
-    glEnableVertexAttribArray(location);
-  }
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-  return vao;
-}
-
-auto createShaderData(
-  std::string_view vertexSource, std::string_view fragmentSource,
-  const Geometry& geometry
-) -> std::optional<ShaderData> {
-  const std::optional<GLuint> program{
-    createProgram(vertexSource, fragmentSource)
-  };
-  if (!program) {
-    return {};
-  }
-
-  const GLuint positionBuffer{createBuffer(
-    GL_ARRAY_BUFFER, geometry.getVertices(),
-    sizeof(float)*geometry.getVertexCount()
-  )};
-  const ShaderAttribute positionAttribute{
-    "position", positionBuffer, geometry.getVertexCount()/3,
-    GL_FLOAT, false, 0, nullptr
-  };
-  const GLuint colorBuffer{createBuffer(
-    GL_ARRAY_BUFFER, geometry.getColors(),
-    sizeof(float)*geometry.getColorCount()
-  )};
-  const ShaderAttribute colorAttribute{
-    "color", colorBuffer, geometry.getColorCount()/3,
-    GL_FLOAT, false, 0, nullptr
-  };
-  const GLuint indexBuffer{createBuffer(
-    GL_ELEMENT_ARRAY_BUFFER, geometry.getIndices(),
-    sizeof(unsigned short)*geometry.getIndexCount()
-  )};
-  const GLuint vao{createVertexArray(
-    *program, {positionAttribute, colorAttribute}, indexBuffer
-  )};
-
-  return {{*program, vao, geometry.getIndexCount()}};
 }
 
 } // namespace

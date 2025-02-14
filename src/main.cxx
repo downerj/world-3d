@@ -13,16 +13,7 @@
 auto main(int /*argc*/, char** /*argv*/) -> int {
   try {
     WindowHandler window{};
-    std::optional<std::string> vertexSource{readFile(
-      "res/shaders/main.vert"
-    )};
-    std::optional<std::string> fragmentSource{readFile(
-      "res/shaders/main.frag"
-    )};
-    if (!vertexSource || !fragmentSource) {
-      throw std::runtime_error{"Failed to load shader sources"};
-    }
-    GraphicsEngine graphics{*vertexSource, *fragmentSource};
+    GraphicsEngine graphics{};
     while (window.isActive()) {
       const WindowActions& actions{window.getActions()};
       if (actions.close) {

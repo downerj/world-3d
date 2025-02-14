@@ -7,25 +7,11 @@
 
 #include <glad/gl.h>
 
-struct ShaderData {
-  GLuint program;
-  GLuint vao;
-  GLsizei indexCount;
-
-  ShaderData(GLuint program, GLuint vao, GLsizei indexCount);
-  ShaderData() = delete;
-  ShaderData(const ShaderData&) = default;
-  ShaderData(ShaderData&&) = default;
-  ShaderData& operator=(const ShaderData&) = default;
-  ShaderData& operator=(ShaderData&&) = default;
-};
+#include "graphics-types.hxx"
 
 class GraphicsEngine {
 public:
-  GraphicsEngine(
-    std::string_view vertexSource, std::string_view fragmentSource
-  );
-  GraphicsEngine() = delete;
+  GraphicsEngine();
   GraphicsEngine(const GraphicsEngine&) = delete;
   GraphicsEngine(GraphicsEngine&&) = delete;
   GraphicsEngine& operator=(const GraphicsEngine&) = delete;
@@ -38,7 +24,7 @@ public:
 private:
   int _windowWidth{};
   int _windowHeight{};
-  std::vector<ShaderData> _shaderDatas{};
+  std::vector<ShaderProgram> _programs{};
 };
 
 #endif // GRAPHICS_HXX
