@@ -85,11 +85,11 @@ ShaderData::ShaderData(
 GraphicsEngine::GraphicsEngine(
   std::string_view vertexSource, std::string_view fragmentSource
 ) {
-  if (!::initializeGL()) {
+  if (!initializeGL()) {
     throw std::runtime_error{"Failed to initialize OpenGL"};
   }
   const std::unique_ptr<Geometry> geometry{std::make_unique<BasicTriangle>()};
-  std::optional<ShaderData> shaderData{::createShaderData(
+  std::optional<ShaderData> shaderData{createShaderData(
     vertexSource, fragmentSource, *geometry
   )};
   if (!shaderData) {
@@ -143,7 +143,7 @@ auto initializeGL() -> bool {
   if (GLAD_GL_ARB_debug_output) {
     LOG("GL extension GL_ARB_debug_output available\n");
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-    glDebugMessageCallbackARB(::debugMessageCallbackGL, nullptr /*userParam*/);
+    glDebugMessageCallbackARB(debugMessageCallbackGL, nullptr /*userParam*/);
   }
   else {
     LOG("GL extension GL_ARB_debug_output unavailable\n");
@@ -166,8 +166,8 @@ auto createShader(GLenum type, std::string_view source) -> GLuint {
 auto createProgram(
   std::string_view vertexSource, std::string_view fragmentSource
 ) -> std::optional<GLuint> {
-  GLuint vertexShader{::createShader(GL_VERTEX_SHADER, vertexSource)};
-  GLuint fragmentShader{::createShader(GL_FRAGMENT_SHADER, fragmentSource)};
+  GLuint vertexShader{createShader(GL_VERTEX_SHADER, vertexSource)};
+  GLuint fragmentShader{createShader(GL_FRAGMENT_SHADER, fragmentSource)};
   GLuint program{glCreateProgram()};
   glAttachShader(program, vertexShader);
   glAttachShader(program, fragmentShader);
@@ -257,7 +257,7 @@ auto createShaderData(
   const Geometry& geometry
 ) -> std::optional<ShaderData> {
   const std::optional<GLuint> program{
-    ::createProgram(vertexSource, fragmentSource)
+    createProgram(vertexSource, fragmentSource)
   };
   if (!program) {
     return {};
@@ -283,7 +283,7 @@ auto createShaderData(
     GL_ELEMENT_ARRAY_BUFFER, geometry.getIndices(),
     sizeof(unsigned short)*geometry.getIndexCount()
   )};
-  const GLuint vao{::createVertexArray(
+  const GLuint vao{createVertexArray(
     *program, {positionAttribute, colorAttribute}, indexBuffer
   )};
 
