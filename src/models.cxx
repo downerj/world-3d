@@ -4,21 +4,25 @@
 
 Geometry::~Geometry() {}
 
-static constexpr std::array<float, 3*3> BasicTriangle_vertices{
+namespace {
+
+constexpr std::array<float, 3*3> BasicTriangle_vertices{
   1., -1., 0.,
   -1., -1., 0.,
   0., 1., 0.
 };
 
-static constexpr std::array<float, 3*3> BasicTriangle_colors{
+constexpr std::array<float, 3*3> BasicTriangle_colors{
   1., 0., 0.,
   0., 1., 0.,
   0., 0., 1.
 };
 
-static constexpr std::array<unsigned short, 3*1> BasicTriangle_indices{
+constexpr std::array<unsigned short, 3*1> BasicTriangle_indices{
   0, 1, 2
 };
+
+} // namespace
 
 auto BasicTriangle::getVertices() const -> const float* {
   return BasicTriangle_vertices.data();
