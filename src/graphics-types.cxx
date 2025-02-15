@@ -7,7 +7,7 @@
 #include "models.hxx"
 
 Buffer::Buffer(
-  BufferTarget target, const void* data, size_t size, BufferUsage usage
+  BufferTarget target, const void* data, std::size_t size, BufferUsage usage
 ) {
   const auto targetGL{static_cast<GLenum>(target)};
   glGenBuffers(1, &_id);

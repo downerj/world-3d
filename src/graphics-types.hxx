@@ -1,6 +1,7 @@
 #ifndef GRAPHICS_TYPES_HXX
 #define GRAPHICS_TYPES_HXX
 
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,7 +23,9 @@ enum class BufferUsage {
 
 class Buffer {
 public:
-  Buffer(BufferTarget target, const void* data, size_t size, BufferUsage usage);
+  Buffer(
+    BufferTarget target, const void* data, std::size_t size, BufferUsage usage
+  );
   Buffer() = delete;
   auto cleanup() -> void;
   auto getID() const -> unsigned int;
