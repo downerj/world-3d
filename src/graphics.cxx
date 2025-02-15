@@ -77,15 +77,21 @@ GraphicsEngine::GraphicsEngine() {
     program, {positionAttribute, colorAttribute}, indexBuffer,
     geometry->getIndexCount()
   };
-  program.addVertexArray(vertexArray);
   vertexShader.cleanup();
   fragmentShader.cleanup();
+  program.addVertexArray(vertexArray);
   _programs.push_back(program);
+  _buffers.push_back(positionBuffer);
+  _buffers.push_back(colorBuffer);
+  _buffers.push_back(indexBuffer);
 }
 
 GraphicsEngine::~GraphicsEngine() {
   for (auto& program : _programs) {
     program.cleanup();
+  }
+  for (auto& buffer : _buffers) {
+    buffer.cleanup();
   }
 }
 

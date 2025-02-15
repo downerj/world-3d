@@ -25,6 +25,7 @@ private:
   int _windowWidth{};
   int _windowHeight{};
   std::vector<ShaderProgram> _programs{};
+  std::vector<Buffer> _buffers{};
 };
 
 #endif // GRAPHICS_HXX
