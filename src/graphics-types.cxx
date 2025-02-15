@@ -8,7 +8,7 @@
 
 Buffer::Buffer(
   BufferTarget target, const void* data, std::size_t size, BufferUsage usage
-) {
+) : _target{target} {
   const auto targetGL{static_cast<GLenum>(target)};
   glGenBuffers(1, &_id);
   glBindBuffer(targetGL, _id);
@@ -16,12 +16,20 @@ Buffer::Buffer(
   glBindBuffer(targetGL, 0);
 }
 
+auto Buffer::cleanup() -> void {
+  glDeleteBuffers(1, &_id);
+}
+
 auto Buffer::getID() const -> unsigned int {
   return _id;
 }
 
-auto Buffer::cleanup() -> void {
-  glDeleteBuffers(1, &_id);
+auto Buffer::bind() const -> void {
+  glBindBuffer(static_cast<GLenum>(_target), _id);
+}
+
+auto Buffer::unbind() const -> void {
+  glBindBuffer(static_cast<GLenum>(_target), 0);
 }
 
 ShaderAttribute::ShaderAttribute(
@@ -43,7 +51,7 @@ VertexArray::VertexArray(
     const GLint location{glGetAttribLocation(
       program.getID(), attribute.name.c_str()
     )};
-    glBindBuffer(GL_ARRAY_BUFFER, attribute.buffer.getID());
+    attribute.buffer.bind();
     glVertexAttribPointer(
       location, attribute.size, static_cast<GLenum>(attribute.type),
       attribute.normalized, attribute.stride, attribute.pointer
@@ -51,7 +59,7 @@ VertexArray::VertexArray(
     glEnableVertexAttribArray(location);
   }
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.getID());
+  indexBuffer.bind();
 
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);

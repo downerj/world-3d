@@ -30,8 +30,11 @@ public:
   Buffer() = delete;
   auto cleanup() -> void;
   auto getID() const -> unsigned int;
+  auto bind() const -> void;
+  auto unbind() const -> void;
 
 private:
+  BufferTarget _target;
   unsigned int _id{};
 };
 
