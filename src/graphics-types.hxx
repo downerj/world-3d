@@ -24,7 +24,8 @@ enum class BufferUsage {
 class Buffer {
 public:
   Buffer(
-    BufferTarget target, const void* data, std::size_t size, BufferUsage usage
+    BufferTarget target, const void* data, std::size_t size,
+    BufferUsage usage = BufferUsage::StaticDraw
   );
   Buffer() = delete;
   auto cleanup() -> void;

@@ -55,7 +55,7 @@ GraphicsEngine::GraphicsEngine() {
   ShaderProgram program{vertexShader, fragmentShader};
   const Buffer positionBuffer{
     BufferTarget::Array, geometry->getVertices(),
-    geometry->getVertexMemorySize(), BufferUsage::StaticDraw
+    geometry->getVertexMemorySize()
   };
   const ShaderAttribute positionAttribute{
     "position", positionBuffer, geometry->getVertexCount(),
@@ -63,7 +63,7 @@ GraphicsEngine::GraphicsEngine() {
   };
   const Buffer colorBuffer{
     BufferTarget::Array, geometry->getColors(),
-    geometry->getColorMemorySize(), BufferUsage::StaticDraw
+    geometry->getColorMemorySize()
   };
   const ShaderAttribute colorAttribute{
     "color", colorBuffer, geometry->getColorCount(),
@@ -71,7 +71,7 @@ GraphicsEngine::GraphicsEngine() {
   };
   const Buffer indexBuffer{
     BufferTarget::ElementArray, geometry->getIndices(),
-    geometry->getIndexMemorySize(), BufferUsage::StaticDraw
+    geometry->getIndexMemorySize()
   };
   VertexArray vertexArray{
     program, {positionAttribute, colorAttribute}, indexBuffer,
