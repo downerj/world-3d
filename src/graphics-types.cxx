@@ -38,34 +38,6 @@ ShaderAttribute::ShaderAttribute(
 ) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
     normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
 
-VertexArray::VertexArray(
-  const ShaderProgram& program,
-  const std::vector<ShaderAttribute>& attributes,
-  const Buffer& indexBuffer,
-  int indexCount
-) : _indexCount{indexCount} {
-  glGenVertexArrays(1, &_id);
-  glBindVertexArray(_id);
-
-  for (const auto& attribute : attributes) {
-    const GLint location{glGetAttribLocation(
-      program.getID(), attribute.name.c_str()
-    )};
-    attribute.buffer.bind();
-    glVertexAttribPointer(
-      location, attribute.size, static_cast<GLenum>(attribute.type),
-      attribute.normalized, attribute.stride, attribute.pointer
-    );
-    glEnableVertexAttribArray(location);
-  }
-
-  indexBuffer.bind();
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
 auto VertexArray::cleanup() -> void {
   glDeleteVertexArrays(1, &_id);
 }
@@ -164,12 +136,12 @@ auto ShaderProgram::getID() const -> unsigned int {
   return _id;
 }
 
-auto ShaderProgram::addVertexArray(VertexArray vertexArray) -> void {
-  _vertexArrays.push_back(vertexArray);
-}
-
 auto ShaderProgram::getVertexArrays() const -> const std::vector<VertexArray>&
 {
+  return _vertexArrays;
+}
+
+auto ShaderProgram::getVertexArrays() -> std::vector<VertexArray>& {
   return _vertexArrays;
 }
 

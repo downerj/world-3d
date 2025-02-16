@@ -68,9 +68,10 @@ struct ShaderAttribute {
 
 class VertexArray {
 public:
+  template<typename Container>
   VertexArray(
     const ShaderProgram& program,
-    const std::vector<ShaderAttribute>& attributes,
+    const Container& attributes,
     const Buffer& indexBuffer,
     int indexCount
   );
@@ -111,13 +112,49 @@ public:
   ShaderProgram() = delete;
   auto cleanup() -> void;
   auto getID() const -> unsigned int;
-  auto addVertexArray(VertexArray vertexArray) -> void;
+  template<typename... Args>
+  auto emplaceVertexArray(Args&&... args) -> void;
   auto getVertexArrays() const -> const std::vector<VertexArray>&;
+  auto getVertexArrays() -> std::vector<VertexArray>&;
   auto use() const -> void;
 
 private:
   unsigned int _id;
   std::vector<VertexArray> _vertexArrays{};
 };
+
+template<typename Container>
+VertexArray::VertexArray(
+  const ShaderProgram& program,
+  const Container& attributes,
+  const Buffer& indexBuffer,
+  int indexCount
+) : _indexCount{indexCount} {
+  glGenVertexArrays(1, &_id);
+  glBindVertexArray(_id);
+
+  for (const auto& attribute : attributes) {
+    const GLint location{glGetAttribLocation(
+      program.getID(), attribute.name.c_str()
+    )};
+    attribute.buffer.bind();
+    glVertexAttribPointer(
+      location, attribute.size, static_cast<GLenum>(attribute.type),
+      attribute.normalized, attribute.stride, attribute.pointer
+    );
+    glEnableVertexAttribArray(location);
+  }
+
+  indexBuffer.bind();
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+template<typename... Args>
+auto ShaderProgram::emplaceVertexArray(Args&&... args) -> void {
+  _vertexArrays.emplace_back(args...);
+}
 
 #endif // GRAPHICS_TYPES_HXX

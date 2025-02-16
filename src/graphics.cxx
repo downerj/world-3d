@@ -52,39 +52,34 @@ GraphicsEngine::GraphicsEngine() {
   }
   Shader vertexShader{ShaderType::Vertex, *vertexSource};
   Shader fragmentShader{ShaderType::Fragment, *fragmentSource};
-  ShaderProgram program{vertexShader, fragmentShader};
-  const Buffer positionBuffer{
+  _programs.reserve(1);
+  ShaderProgram& program{_programs.emplace_back(vertexShader, fragmentShader)};
+  _buffers.reserve(3);
+  const Buffer& positionBuffer{_buffers.emplace_back(
     BufferTarget::Array, geometry->getVertices(),
     geometry->getVertexMemorySize()
-  };
-  const ShaderAttribute positionAttribute{
-    "position", positionBuffer, geometry->getVertexCount(),
-    AttributeType::Float, false, 0, nullptr
-  };
-  const Buffer colorBuffer{
+  )};
+  const Buffer& colorBuffer{_buffers.emplace_back(
     BufferTarget::Array, geometry->getColors(),
     geometry->getColorMemorySize()
-  };
-  const ShaderAttribute colorAttribute{
-    "color", colorBuffer, geometry->getColorCount(),
-    AttributeType::Float, false, 0, nullptr
-  };
-  const Buffer indexBuffer{
+  )};
+  const Buffer& indexBuffer{_buffers.emplace_back(
     BufferTarget::ElementArray, geometry->getIndices(),
     geometry->getIndexMemorySize()
-  };
-  const std::vector<ShaderAttribute> attributes{positionAttribute, colorAttribute};
-  VertexArray vertexArray{
+  )};
+  std::vector<ShaderAttribute> attributes{{
+    "position", positionBuffer, geometry->getVertexCount(),
+    AttributeType::Float, false, 0, nullptr
+  }, {
+    "color", colorBuffer, geometry->getColorCount(),
+    AttributeType::Float, false, 0, nullptr
+  }};
+  program.emplaceVertexArray(
     program, attributes, indexBuffer,
     geometry->getIndexCount()
-  };
+  );
   vertexShader.cleanup();
   fragmentShader.cleanup();
-  program.addVertexArray(vertexArray);
-  _programs.push_back(program);
-  _buffers.push_back(positionBuffer);
-  _buffers.push_back(colorBuffer);
-  _buffers.push_back(indexBuffer);
 }
 
 GraphicsEngine::~GraphicsEngine() {
