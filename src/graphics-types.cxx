@@ -40,7 +40,7 @@ ShaderAttribute::ShaderAttribute(
 
 VertexArray::VertexArray(
   const ShaderProgram& program,
-  std::initializer_list<ShaderAttribute> attributes,
+  const std::vector<ShaderAttribute>& attributes,
   const Buffer& indexBuffer,
   int indexCount
 ) : _indexCount{indexCount} {

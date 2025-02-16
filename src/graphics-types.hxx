@@ -70,7 +70,7 @@ class VertexArray {
 public:
   VertexArray(
     const ShaderProgram& program,
-    std::initializer_list<ShaderAttribute> attributes,
+    const std::vector<ShaderAttribute>& attributes,
     const Buffer& indexBuffer,
     int indexCount
   );

@@ -73,8 +73,9 @@ GraphicsEngine::GraphicsEngine() {
     BufferTarget::ElementArray, geometry->getIndices(),
     geometry->getIndexMemorySize()
   };
+  const std::vector<ShaderAttribute> attributes{positionAttribute, colorAttribute};
   VertexArray vertexArray{
-    program, {positionAttribute, colorAttribute}, indexBuffer,
+    program, attributes, indexBuffer,
     geometry->getIndexCount()
   };
   vertexShader.cleanup();
