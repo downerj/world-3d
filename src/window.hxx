@@ -5,6 +5,12 @@
 
 struct GLFWwindow;
 
+/*
+ * Declarations.
+ */
+
+namespace my {
+
 struct WindowActions {
   bool close{false};
   bool resetSize{false};
@@ -47,5 +53,7 @@ private:
   ) -> void;
   auto onKey(int key, int action, int mods) -> void;
 };
+
+} // namespace my
 
 #endif // WINDOW_HXX

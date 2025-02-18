@@ -2,6 +2,10 @@
 
 #include <array>
 
+/*
+ * Declarations.
+ */
+
 namespace {
 
 constexpr std::array<float, 3*3> BasicTriangle_vertices{
@@ -22,52 +26,56 @@ constexpr std::array<unsigned short, 3*1> BasicTriangle_indices{
 
 } // namespace
 
-Geometry::~Geometry() {}
+/*
+ * Definitions.
+ */
 
-auto Geometry::getVertexMemorySize() const -> std::size_t {
+my::Geometry::~Geometry() {}
+
+auto my::Geometry::getVertexMemorySize() const -> std::size_t {
   return getVertexArraySize()*sizeof(float);
 }
 
-auto Geometry::getColorMemorySize() const -> std::size_t {
+auto my::Geometry::getColorMemorySize() const -> std::size_t {
   return getColorArraySize()*sizeof(float);
 }
 
-auto Geometry::getIndexMemorySize() const -> std::size_t {
+auto my::Geometry::getIndexMemorySize() const -> std::size_t {
   return getIndexArraySize()*sizeof(unsigned short);
 }
 
-auto Geometry::getVertexCount() const -> int {
+auto my::Geometry::getVertexCount() const -> int {
   return getVertexArraySize()/3;
 }
 
-auto Geometry::getColorCount() const -> int {
+auto my::Geometry::getColorCount() const -> int {
   return getColorArraySize()/3;
 }
 
-auto Geometry::getIndexCount() const -> int {
+auto my::Geometry::getIndexCount() const -> int {
   return getIndexArraySize();
 }
 
-auto BasicTriangle::getVertices() const -> const float* {
+auto my::BasicTriangle::getVertices() const -> const float* {
   return BasicTriangle_vertices.data();
 }
 
-auto BasicTriangle::getColors() const -> const float* {
+auto my::BasicTriangle::getColors() const -> const float* {
   return BasicTriangle_colors.data();
 }
 
-auto BasicTriangle::getIndices() const -> const unsigned short* {
+auto my::BasicTriangle::getIndices() const -> const unsigned short* {
   return BasicTriangle_indices.data();
 }
 
-auto BasicTriangle::getVertexArraySize() const -> int {
+auto my::BasicTriangle::getVertexArraySize() const -> int {
   return BasicTriangle_vertices.size();
 }
 
-auto BasicTriangle::getColorArraySize() const -> int {
+auto my::BasicTriangle::getColorArraySize() const -> int {
   return BasicTriangle_colors.size();
 }
 
-auto BasicTriangle::getIndexArraySize() const -> int {
+auto my::BasicTriangle::getIndexArraySize() const -> int {
   return BasicTriangle_indices.size();
 }

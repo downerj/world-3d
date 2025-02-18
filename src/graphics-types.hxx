@@ -7,6 +7,12 @@
 
 #include <glad/gl.h>
 
+/*
+ * Declarations.
+ */
+
+namespace my {
+
 class ShaderProgram;
 
 enum class BufferTarget {
@@ -122,8 +128,14 @@ private:
   std::vector<VertexArray> _vertexArrays{};
 };
 
+} // namespace my
+
+/*
+ * Definitions.
+ */
+
 template<typename Container>
-VertexArray::VertexArray(
+my::VertexArray::VertexArray(
   const ShaderProgram& program,
   const Container& attributes,
   const Buffer& indexBuffer,
@@ -152,7 +164,7 @@ VertexArray::VertexArray(
 }
 
 template<typename... Args>
-auto ShaderProgram::emplaceVertexArray(Args&&... args) -> void {
+auto my::ShaderProgram::emplaceVertexArray(Args&&... args) -> void {
   _vertexArrays.emplace_back(args...);
 }
 

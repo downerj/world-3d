@@ -3,6 +3,12 @@
 
 #include <cstddef>
 
+/*
+ * Declarations.
+ */
+
+namespace my {
+
 class Geometry {
 public:
   virtual auto getVertices() const -> const float* = 0;
@@ -29,5 +35,7 @@ public:
   auto getColorArraySize() const -> int final;
   auto getIndexArraySize() const -> int final;
 };
+
+} // namespace my
 
 #endif // MODELS_HXX

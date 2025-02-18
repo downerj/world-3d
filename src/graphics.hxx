@@ -9,6 +9,12 @@
 
 #include "graphics-types.hxx"
 
+/*
+ * Declarations.
+ */
+
+namespace my {
+
 class GraphicsEngine {
 public:
   GraphicsEngine();
@@ -27,5 +33,7 @@ private:
   std::vector<ShaderProgram> _programs{};
   std::vector<Buffer> _buffers{};
 };
+
+} // namespace my
 
 #endif // GRAPHICS_HXX

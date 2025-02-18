@@ -6,6 +6,10 @@
 
 #include "debug.hxx"
 
+/*
+ * Declarations.
+ */
+
 namespace {
 #ifdef DEBUG
   auto errorCallbackGLFW(int /*error*/, const char* description) -> void {
@@ -14,7 +18,11 @@ namespace {
 #endif // DEBUG
 }
 
-WindowHandler::WindowHandler() {
+/*
+ * Definitions.
+ */
+
+my::WindowHandler::WindowHandler() {
   if (!glfwInit()) {
     throw std::runtime_error{"Failed to initialize windowing library"};
   }
@@ -42,55 +50,55 @@ WindowHandler::WindowHandler() {
   glfwSetWindowUserPointer(_window, this);
 }
 
-WindowHandler::~WindowHandler() {
+my::WindowHandler::~WindowHandler() {
   glfwDestroyWindow(_window);
   glfwTerminate();
 }
 
-auto WindowHandler::getWindow() -> GLFWwindow* {
+auto my::WindowHandler::getWindow() -> GLFWwindow* {
   return _window;
 }
 
-auto WindowHandler::getActions() const -> const WindowActions& {
+auto my::WindowHandler::getActions() const -> const WindowActions& {
   return _actions;
 }
 
-auto WindowHandler::getWidth() const -> int {
+auto my::WindowHandler::getWidth() const -> int {
   return _width;
 }
 
-auto WindowHandler::getHeight() const -> int {
+auto my::WindowHandler::getHeight() const -> int {
   return _height;
 }
 
-auto WindowHandler::isActive() const -> bool {
+auto my::WindowHandler::isActive() const -> bool {
   return !glfwWindowShouldClose(_window);
 }
 
-auto WindowHandler::close() -> void {
+auto my::WindowHandler::close() -> void {
   glfwSetWindowShouldClose(_window, true);
 }
 
-auto WindowHandler::resetSize() -> void {
+auto my::WindowHandler::resetSize() -> void {
   glfwSetWindowSize(_window, _initialWidth, _initialHeight);
 }
 
-auto WindowHandler::preRender() -> void {
+auto my::WindowHandler::preRender() -> void {
   glfwGetFramebufferSize(_window, &_width, &_height);
 }
 
-auto WindowHandler::postRender() -> void {
+auto my::WindowHandler::postRender() -> void {
   glfwSwapBuffers(_window);
   glfwPollEvents();
 }
 
-auto WindowHandler::resetActions() -> void {
+auto my::WindowHandler::resetActions() -> void {
   _actions.close = false;
   _actions.resetSize = false;
   _actions.pauseResume = false;
 }
 
-auto WindowHandler::onKeyGLFW(
+auto my::WindowHandler::onKeyGLFW(
   GLFWwindow* window, int key, int /*scancode*/, int action, int mods
 ) -> void {
   const auto windowHandler{
@@ -101,7 +109,7 @@ auto WindowHandler::onKeyGLFW(
   }
 }
 
-auto WindowHandler::onKey(int key, int action, int mods) -> void {
+auto my::WindowHandler::onKey(int key, int action, int mods) -> void {
   // LOG("key=" << key << " action=" << action << " mods=" << mods << '\n');
   const bool closeKey1{
     action == GLFW_RELEASE && mods == GLFW_MOD_CONTROL && key == GLFW_KEY_Q

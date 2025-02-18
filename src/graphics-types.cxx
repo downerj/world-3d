@@ -6,7 +6,11 @@
 
 #include "models.hxx"
 
-Buffer::Buffer(
+/*
+ * Definitions.
+ */
+
+my::Buffer::Buffer(
   BufferTarget target, const void* data, std::size_t size, BufferUsage usage
 ) : _target{target} {
   const auto targetGL{static_cast<GLenum>(target)};
@@ -16,49 +20,49 @@ Buffer::Buffer(
   glBindBuffer(targetGL, 0);
 }
 
-auto Buffer::cleanup() -> void {
+auto my::Buffer::cleanup() -> void {
   glDeleteBuffers(1, &_id);
 }
 
-auto Buffer::getID() const -> unsigned int {
+auto my::Buffer::getID() const -> unsigned int {
   return _id;
 }
 
-auto Buffer::bind() const -> void {
+auto my::Buffer::bind() const -> void {
   glBindBuffer(static_cast<GLenum>(_target), _id);
 }
 
-auto Buffer::unbind() const -> void {
+auto my::Buffer::unbind() const -> void {
   glBindBuffer(static_cast<GLenum>(_target), 0);
 }
 
-ShaderAttribute::ShaderAttribute(
+my::ShaderAttribute::ShaderAttribute(
   std::string_view name_, const Buffer& buffer_, int size_, AttributeType type_,
   bool normalized_, int stride_, void* pointer_
 ) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
     normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
 
-auto VertexArray::cleanup() -> void {
+auto my::VertexArray::cleanup() -> void {
   glDeleteVertexArrays(1, &_id);
 }
 
-auto VertexArray::getID() const -> unsigned int {
+auto my::VertexArray::getID() const -> unsigned int {
   return _id;
 }
 
-auto VertexArray::getIndexCount() const -> int {
+auto my::VertexArray::getIndexCount() const -> int {
   return _indexCount;
 }
 
-auto VertexArray::bind() const -> void {
+auto my::VertexArray::bind() const -> void {
   glBindVertexArray(_id);
 }
 
-auto VertexArray::unbind() const -> void {
+auto my::VertexArray::unbind() const -> void {
   glBindVertexArray(0);
 }
 
-Shader::Shader(
+my::Shader::Shader(
   ShaderType type, std::string_view source
 ) : _type{type}, _id{glCreateShader(static_cast<GLenum>(type))} {
   const char* sources[]{source.data()};
@@ -67,19 +71,19 @@ Shader::Shader(
   glCompileShader(_id);
 }
 
-auto Shader::cleanup() const -> void {
+auto my::Shader::cleanup() const -> void {
   glDeleteShader(_id);
 }
 
-auto Shader::getType() const -> ShaderType {
+auto my::Shader::getType() const -> ShaderType {
   return _type;
 }
 
-auto Shader::getID() const -> unsigned int {
+auto my::Shader::getID() const -> unsigned int {
   return _id;
 }
 
-ShaderProgram::ShaderProgram(
+my::ShaderProgram::ShaderProgram(
   const Shader& vertexShader, const Shader& fragmentShader
 ) : _id{glCreateProgram()} {
   glAttachShader(_id, vertexShader.getID());
@@ -125,26 +129,27 @@ ShaderProgram::ShaderProgram(
   }
 }
 
-auto ShaderProgram::cleanup() -> void {
+auto my::ShaderProgram::cleanup() -> void {
   glDeleteProgram(_id);
   for (auto& vertexArray : _vertexArrays) {
     vertexArray.cleanup();
   }
 }
 
-auto ShaderProgram::getID() const -> unsigned int {
+auto my::ShaderProgram::getID() const -> unsigned int {
   return _id;
 }
 
-auto ShaderProgram::getVertexArrays() const -> const std::vector<VertexArray>&
+auto my::ShaderProgram::getVertexArrays() const
+-> const std::vector<VertexArray>&
 {
   return _vertexArrays;
 }
 
-auto ShaderProgram::getVertexArrays() -> std::vector<VertexArray>& {
+auto my::ShaderProgram::getVertexArrays() -> std::vector<VertexArray>& {
   return _vertexArrays;
 }
 
-auto ShaderProgram::use() const -> void {
+auto my::ShaderProgram::use() const -> void {
   glUseProgram(_id);
 }

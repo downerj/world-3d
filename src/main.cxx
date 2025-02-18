@@ -12,10 +12,10 @@
 
 auto main(int /*argc*/, char** /*argv*/) -> int {
   try {
-    WindowHandler window{};
-    GraphicsEngine graphics{};
+    my::WindowHandler window{};
+    my::GraphicsEngine graphics{};
     while (window.isActive()) {
-      const WindowActions& actions{window.getActions()};
+      const my::WindowActions& actions{window.getActions()};
       if (actions.close) {
         window.close();
         break;

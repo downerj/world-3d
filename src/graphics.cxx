@@ -35,7 +35,7 @@ auto initializeGL() -> bool;
  * Definitions.
  */
 
-GraphicsEngine::GraphicsEngine() {
+my::GraphicsEngine::GraphicsEngine() {
   if (!initializeGL()) {
     throw std::runtime_error{"Failed to initialize OpenGL"};
   }
@@ -82,7 +82,7 @@ GraphicsEngine::GraphicsEngine() {
   fragmentShader.cleanup();
 }
 
-GraphicsEngine::~GraphicsEngine() {
+my::GraphicsEngine::~GraphicsEngine() {
   for (auto& program : _programs) {
     program.cleanup();
   }
@@ -91,12 +91,12 @@ GraphicsEngine::~GraphicsEngine() {
   }
 }
 
-auto GraphicsEngine::resize(int width, int height) -> void {
+auto my::GraphicsEngine::resize(int width, int height) -> void {
   _windowWidth = width;
   _windowHeight = height;
 }
 
-auto GraphicsEngine::render() -> void {
+auto my::GraphicsEngine::render() -> void {
   glViewport(0, 0, _windowWidth, _windowHeight);
   glClearColor(0., .5, 1., 1.);
   glClear(GL_COLOR_BUFFER_BIT);
