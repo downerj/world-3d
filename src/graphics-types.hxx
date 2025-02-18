@@ -2,7 +2,6 @@
 #define GRAPHICS_TYPES_HXX
 
 #include <cstddef>
-#include <string>
 #include <string_view>
 #include <vector>
 
@@ -51,7 +50,7 @@ enum class AttributeType {
 };
 
 struct ShaderAttribute {
-  std::string name{};
+  std::string_view name{};
   const Buffer& buffer;
   int size{};
   AttributeType type{};
@@ -60,7 +59,7 @@ struct ShaderAttribute {
   void* pointer{};
 
   ShaderAttribute(
-    std::string name, const Buffer& buffer, int size, AttributeType type,
+    std::string_view name, const Buffer& buffer, int size, AttributeType type,
     bool normalized, int stride, void* pointer
   );
   ShaderAttribute() = delete;
@@ -135,7 +134,7 @@ VertexArray::VertexArray(
 
   for (const auto& attribute : attributes) {
     const GLint location{glGetAttribLocation(
-      program.getID(), attribute.name.c_str()
+      program.getID(), attribute.name.data()
     )};
     attribute.buffer.bind();
     glVertexAttribPointer(

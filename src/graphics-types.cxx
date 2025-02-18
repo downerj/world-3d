@@ -33,7 +33,7 @@ auto Buffer::unbind() const -> void {
 }
 
 ShaderAttribute::ShaderAttribute(
-  std::string name_, const Buffer& buffer_, int size_, AttributeType type_,
+  std::string_view name_, const Buffer& buffer_, int size_, AttributeType type_,
   bool normalized_, int stride_, void* pointer_
 ) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
     normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
