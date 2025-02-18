@@ -13,10 +13,6 @@
 #include "io.hxx"
 #include "models.hxx"
 
-// Include this last to avoid One Definition Rule (ODR) violations.
-#define GLAD_GL_IMPLEMENTATION
-#include <glad/gl.h>
-
 /*
  * Declarations.
  */
