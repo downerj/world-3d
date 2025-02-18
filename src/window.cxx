@@ -11,12 +11,14 @@
  */
 
 namespace {
+
 #ifdef DEBUG
   auto errorCallbackGLFW(int /*error*/, const char* description) -> void {
     LOG_ERROR("GLFW error: " << description << '\n');
   }
 #endif // DEBUG
-}
+
+} // namespace
 
 /*
  * Definitions.
