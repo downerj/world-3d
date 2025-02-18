@@ -5,6 +5,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -50,21 +51,19 @@ my::GraphicsEngine::GraphicsEngine() {
   }
   Shader vertexShader{ShaderType::Vertex, *vertexSource};
   Shader fragmentShader{ShaderType::Fragment, *fragmentSource};
-  _programs.reserve(1);
-  ShaderProgram& program{_programs.emplace_back(vertexShader, fragmentShader)};
-  _buffers.reserve(3);
-  const Buffer& positionBuffer{_buffers.emplace_back(
+  ShaderProgram program{vertexShader, fragmentShader};
+  Buffer positionBuffer{
     BufferTarget::Array, geometry->getVertices(),
-    geometry->getVertexMemorySize()
-  )};
-  const Buffer& colorBuffer{_buffers.emplace_back(
+    static_cast<GLsizei>(geometry->getVertexMemorySize())
+  };
+  Buffer colorBuffer{
     BufferTarget::Array, geometry->getColors(),
-    geometry->getColorMemorySize()
-  )};
-  const Buffer& indexBuffer{_buffers.emplace_back(
+    static_cast<GLsizei>(geometry->getColorMemorySize())
+  };
+  Buffer indexBuffer{
     BufferTarget::ElementArray, geometry->getIndices(),
-    geometry->getIndexMemorySize()
-  )};
+    static_cast<GLsizei>(geometry->getIndexMemorySize())
+  };
   std::vector<ShaderAttribute> attributes{{
     "position", positionBuffer, geometry->getVertexCount(),
     AttributeType::Float, false, 0, nullptr
@@ -72,21 +71,21 @@ my::GraphicsEngine::GraphicsEngine() {
     "color", colorBuffer, geometry->getColorCount(),
     AttributeType::Float, false, 0, nullptr
   }};
-  program.emplaceVertexArray(
+  VertexArray vao{
     program, attributes, indexBuffer,
     geometry->getIndexCount()
-  );
-  vertexShader.cleanup();
-  fragmentShader.cleanup();
-}
-
-my::GraphicsEngine::~GraphicsEngine() {
-  for (auto& program : _programs) {
-    program.cleanup();
-  }
-  for (auto& buffer : _buffers) {
-    buffer.cleanup();
-  }
+  };
+  std::vector<VertexArray>& vertexArrays{
+    program.getVertexArrays()
+  };
+  vertexArrays.reserve(1);
+  vertexArrays.push_back(std::move(vao));
+  _programs.reserve(1);
+  _programs.push_back(std::move(program));
+  _buffers.reserve(3);
+  _buffers.push_back(std::move(positionBuffer));
+  _buffers.push_back(std::move(colorBuffer));
+  _buffers.push_back(std::move(indexBuffer));
 }
 
 auto my::GraphicsEngine::resize(int width, int height) -> void {

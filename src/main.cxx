@@ -14,6 +14,7 @@ auto main(int /*argc*/, char** /*argv*/) -> int {
   try {
     my::WindowHandler window{};
     my::GraphicsEngine graphics{};
+    LOG("Begin main loop\n");
     while (window.isActive()) {
       const my::WindowActions& actions{window.getActions()};
       if (actions.close) {
@@ -29,8 +30,10 @@ auto main(int /*argc*/, char** /*argv*/) -> int {
       graphics.render();
       window.postRender();
     }
+    LOG("End main loop\n");
   } catch (std::exception& ex) {
     std::cerr << ex.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
+  LOG("Goodbye.\n");
 }

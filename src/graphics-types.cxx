@@ -1,9 +1,9 @@
 #include "graphics-types.hxx"
 
-#include <iostream>
 #include <optional>
 #include <stdexcept>
 
+#include "debug.hxx"
 #include "models.hxx"
 
 /*
@@ -20,9 +20,50 @@ my::Buffer::Buffer(
   glBindBuffer(targetGL, 0);
 }
 
-auto my::Buffer::cleanup() -> void {
+my::Buffer::Buffer(Buffer&& buffer)
+: _target{buffer._target}, _id{buffer._id} {
+  LOG("Moving " << *this << '\n');
+  buffer._valid = false;
+}
+
+auto my::Buffer::operator=(Buffer&& buffer) -> Buffer& {
+  LOG("Move-assigning " << *this << '\n');
+  _target = buffer._target;
+  _id = buffer._id;
+  buffer._valid = false;
+  return *this;
+}
+
+my::Buffer::~Buffer() {
+  if (!_valid) {
+    return;
+  }
+  LOG("Cleaning up " << *this << '\n');
   glDeleteBuffers(1, &_id);
 }
+
+#ifdef DEBUG
+auto my::operator<<(std::ostream& out, const my::Buffer& buffer)
+-> std::ostream& {
+  out << "Buffer(id=" << buffer._id << ", target=";
+  switch (buffer._target) {
+    case BufferTarget::Array: {
+      out << "Array";
+      break;
+    }
+    case BufferTarget::ElementArray: {
+      out << "ElementArray";
+      break;
+    }
+    default: {
+      out << "?";
+      break;
+    }
+  }
+  out << ')';
+  return out;
+}
+#endif // DEBUG
 
 auto my::Buffer::getID() const -> GLuint {
   return _id;
@@ -43,9 +84,36 @@ my::ShaderAttribute::ShaderAttribute(
 ) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
     normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
 
-auto my::VertexArray::cleanup() -> void {
+my::VertexArray::VertexArray(VertexArray&& vao)
+: _id{vao._id}, _indexCount{vao._indexCount} {
+  LOG("Moving " << vao << '\n');
+  vao._valid = false;
+}
+
+auto my::VertexArray::operator=(VertexArray&& vao) -> VertexArray& {
+  LOG("Move-assigning " << vao << '\n');
+  _id = vao._id;
+  _indexCount = vao._indexCount;
+  vao._valid = false;
+  return *this;
+}
+
+my::VertexArray::~VertexArray() {
+  if (!_valid) {
+    return;
+  }
+  LOG("Cleaning up " << *this << '\n');
   glDeleteVertexArrays(1, &_id);
 }
+
+#ifdef DEBUG
+auto my::operator<<(std::ostream& out, const VertexArray& vao)
+-> std::ostream& {
+  out << "VertexArray(id=" << vao._id;
+  out << ", indexCount=" << vao._indexCount << ')';
+  return out;
+}
+#endif // DEBUG
 
 auto my::VertexArray::getID() const -> GLuint {
   return _id;
@@ -72,9 +140,48 @@ my::Shader::Shader(
   glCompileShader(_id);
 }
 
-auto my::Shader::cleanup() const -> void {
+my::Shader::Shader(Shader&& shader) : _type{shader._type}, _id{shader._id} {
+  LOG("Moving " << shader << '\n');
+  shader._valid = false;
+}
+
+auto my::Shader::operator=(Shader&& shader) -> Shader& {
+  LOG("Move-assigning " << shader << '\n');
+  _type = shader._type;
+  _id = shader._id;
+  shader._valid = false;
+  return *this;
+}
+
+my::Shader::~Shader() {
+  if (!_valid) {
+    return;
+  }
+  LOG("Cleaning up " << *this << '\n');
   glDeleteShader(_id);
 }
+
+#ifdef DEBUG
+auto my::operator<<(std::ostream& out, const Shader& shader) -> std::ostream& {
+  out << "Shader(id=" << shader._id << ", type=";
+  switch (shader._type) {
+    case ShaderType::Vertex: {
+      out << "Vertex";
+      break;
+    }
+    case ShaderType::Fragment: {
+      out << "Fragment";
+      break;
+    }
+    default: {
+      out << "?";
+      break;
+    }
+  }
+  out << ')';
+  return out;
+}
+#endif // DEBUG
 
 auto my::Shader::getType() const -> ShaderType {
   return _type;
@@ -130,12 +237,35 @@ my::ShaderProgram::ShaderProgram(
   }
 }
 
-auto my::ShaderProgram::cleanup() -> void {
-  glDeleteProgram(_id);
-  for (auto& vertexArray : _vertexArrays) {
-    vertexArray.cleanup();
-  }
+my::ShaderProgram::ShaderProgram(ShaderProgram&& program)
+: _id{program._id}, _vertexArrays{std::move(program._vertexArrays)} {
+  LOG("Moving " << program << '\n');
+  program._valid = false;
 }
+
+auto my::ShaderProgram::operator=(ShaderProgram&& program) -> ShaderProgram& {
+  LOG("Move-assigning " << program << '\n');
+  _id = program._id;
+  _vertexArrays = std::move(program._vertexArrays);
+  program._valid = false;
+  return *this;
+}
+
+my::ShaderProgram::~ShaderProgram() {
+  if (!_valid) {
+    return;
+  }
+  LOG("Cleaning up " << *this << '\n');
+  glDeleteProgram(_id);
+}
+
+#ifdef DEBUG
+auto my::operator<<(std::ostream& out, const ShaderProgram& program)
+-> std::ostream& {
+  out << "ShaderProgram(id=" << program._id << ')';
+  return out;
+}
+#endif // DEBUG
 
 auto my::ShaderProgram::getID() const -> GLuint {
   return _id;
