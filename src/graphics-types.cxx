@@ -24,7 +24,7 @@ auto my::Buffer::cleanup() -> void {
   glDeleteBuffers(1, &_id);
 }
 
-auto my::Buffer::getID() const -> unsigned int {
+auto my::Buffer::getID() const -> GLuint {
   return _id;
 }
 
@@ -47,11 +47,11 @@ auto my::VertexArray::cleanup() -> void {
   glDeleteVertexArrays(1, &_id);
 }
 
-auto my::VertexArray::getID() const -> unsigned int {
+auto my::VertexArray::getID() const -> GLuint {
   return _id;
 }
 
-auto my::VertexArray::getIndexCount() const -> int {
+auto my::VertexArray::getIndexCount() const -> GLsizei {
   return _indexCount;
 }
 
@@ -80,7 +80,7 @@ auto my::Shader::getType() const -> ShaderType {
   return _type;
 }
 
-auto my::Shader::getID() const -> unsigned int {
+auto my::Shader::getID() const -> GLuint {
   return _id;
 }
 

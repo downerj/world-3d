@@ -34,7 +34,7 @@ public:
   );
   Buffer() = delete;
   auto cleanup() -> void;
-  auto getID() const -> unsigned int;
+  auto getID() const -> GLuint;
   auto bind() const -> void;
   auto unbind() const -> void;
 
