@@ -29,7 +29,7 @@ enum class BufferUsage {
 class Buffer {
 public:
   Buffer(
-    BufferTarget target, const void* data, std::size_t size,
+    BufferTarget target, const GLvoid* data, GLsizei size,
     BufferUsage usage = BufferUsage::StaticDraw
   );
   Buffer() = delete;
@@ -40,7 +40,7 @@ public:
 
 private:
   BufferTarget _target;
-  unsigned int _id{};
+  GLuint _id{};
 };
 
 enum class AttributeType {
@@ -58,15 +58,15 @@ enum class AttributeType {
 struct ShaderAttribute {
   std::string_view name{};
   const Buffer& buffer;
-  int size{};
+  GLint size{};
   AttributeType type{};
-  bool normalized{};
-  int stride{};
-  void* pointer{};
+  GLboolean normalized{};
+  GLsizei stride{};
+  const GLvoid* pointer{};
 
   ShaderAttribute(
-    std::string_view name, const Buffer& buffer, int size, AttributeType type,
-    bool normalized, int stride, void* pointer
+    std::string_view name, const Buffer& buffer, GLint size, AttributeType type,
+    GLboolean normalized, GLint stride, const GLvoid* pointer
   );
   ShaderAttribute() = delete;
 };
@@ -78,18 +78,18 @@ public:
     const ShaderProgram& program,
     const Container& attributes,
     const Buffer& indexBuffer,
-    int indexCount
+    GLsizei indexCount
   );
   VertexArray() = delete;
   auto cleanup() -> void;
-  auto getID() const -> unsigned int;
-  auto getIndexCount() const -> int;
+  auto getID() const -> GLuint;
+  auto getIndexCount() const -> GLsizei;
   auto bind() const -> void;
   auto unbind() const -> void;
 
 private:
-  unsigned int _id{};
-  int _indexCount;
+  GLuint _id{};
+  GLsizei _indexCount;
 };
 
 enum class ShaderType {
@@ -104,11 +104,11 @@ public:
   Shader() = delete;
   auto cleanup() const -> void;
   auto getType() const -> ShaderType;
-  auto getID() const -> unsigned int;
+  auto getID() const -> GLuint;
 
 private:
   ShaderType _type;
-  unsigned int _id;
+  GLuint _id;
 };
 
 class ShaderProgram {
@@ -116,7 +116,7 @@ public:
   ShaderProgram(const Shader& vertex, const Shader& fragment);
   ShaderProgram() = delete;
   auto cleanup() -> void;
-  auto getID() const -> unsigned int;
+  auto getID() const -> GLuint;
   template<typename... Args>
   auto emplaceVertexArray(Args&&... args) -> void;
   auto getVertexArrays() const -> const std::vector<VertexArray>&;
@@ -124,7 +124,7 @@ public:
   auto use() const -> void;
 
 private:
-  unsigned int _id;
+  GLuint _id;
   std::vector<VertexArray> _vertexArrays{};
 };
 
@@ -139,7 +139,7 @@ my::VertexArray::VertexArray(
   const ShaderProgram& program,
   const Container& attributes,
   const Buffer& indexBuffer,
-  int indexCount
+  GLsizei indexCount
 ) : _indexCount{indexCount} {
   glGenVertexArrays(1, &_id);
   glBindVertexArray(_id);

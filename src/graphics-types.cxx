@@ -11,7 +11,7 @@
  */
 
 my::Buffer::Buffer(
-  BufferTarget target, const void* data, std::size_t size, BufferUsage usage
+  BufferTarget target, const GLvoid* data, GLsizei size, BufferUsage usage
 ) : _target{target} {
   const auto targetGL{static_cast<GLenum>(target)};
   glGenBuffers(1, &_id);
@@ -37,8 +37,9 @@ auto my::Buffer::unbind() const -> void {
 }
 
 my::ShaderAttribute::ShaderAttribute(
-  std::string_view name_, const Buffer& buffer_, int size_, AttributeType type_,
-  bool normalized_, int stride_, void* pointer_
+  std::string_view name_, const Buffer& buffer_, GLint size_,
+  AttributeType type_, GLboolean normalized_, GLint stride_,
+  const GLvoid* pointer_
 ) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
     normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
 
@@ -65,8 +66,8 @@ auto my::VertexArray::unbind() const -> void {
 my::Shader::Shader(
   ShaderType type, std::string_view source
 ) : _type{type}, _id{glCreateShader(static_cast<GLenum>(type))} {
-  const char* sources[]{source.data()};
-  const int lengths[]{static_cast<int>(source.size())};
+  const GLchar* sources[]{source.data()};
+  const GLint lengths[]{static_cast<GLint>(source.size())};
   glShaderSource(_id, 1, sources, lengths);
   glCompileShader(_id);
 }
@@ -93,7 +94,7 @@ my::ShaderProgram::ShaderProgram(
   glGetProgramiv(_id, GL_LINK_STATUS, &status);
 #ifdef DEBUG
   if (!status) {
-    int logLength{};
+    GLint logLength{};
     std::string log{};
 
     glGetProgramiv(_id, GL_INFO_LOG_LENGTH, &logLength);
@@ -136,7 +137,7 @@ auto my::ShaderProgram::cleanup() -> void {
   }
 }
 
-auto my::ShaderProgram::getID() const -> unsigned int {
+auto my::ShaderProgram::getID() const -> GLuint {
   return _id;
 }
 

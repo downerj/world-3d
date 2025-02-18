@@ -8,19 +8,19 @@
 
 namespace {
 
-constexpr std::array<float, 3*3> BasicTriangle_vertices{
+constexpr std::array<GLfloat, 3*3> BasicTriangle_vertices{
   1., -1., 0.,
   -1., -1., 0.,
   0., 1., 0.
 };
 
-constexpr std::array<float, 3*3> BasicTriangle_colors{
+constexpr std::array<GLfloat, 3*3> BasicTriangle_colors{
   1., 0., 0.,
   0., 1., 0.,
   0., 0., 1.
 };
 
-constexpr std::array<unsigned short, 3*1> BasicTriangle_indices{
+constexpr std::array<GLushort, 3*1> BasicTriangle_indices{
   0, 1, 2
 };
 
@@ -32,50 +32,50 @@ constexpr std::array<unsigned short, 3*1> BasicTriangle_indices{
 
 my::Geometry::~Geometry() {}
 
-auto my::Geometry::getVertexMemorySize() const -> std::size_t {
-  return getVertexArraySize()*sizeof(float);
+auto my::Geometry::getVertexMemorySize() const -> GLsizeiptr {
+  return getVertexArraySize()*sizeof(GLfloat);
 }
 
-auto my::Geometry::getColorMemorySize() const -> std::size_t {
-  return getColorArraySize()*sizeof(float);
+auto my::Geometry::getColorMemorySize() const -> GLsizeiptr {
+  return getColorArraySize()*sizeof(GLfloat);
 }
 
-auto my::Geometry::getIndexMemorySize() const -> std::size_t {
-  return getIndexArraySize()*sizeof(unsigned short);
+auto my::Geometry::getIndexMemorySize() const -> GLsizeiptr {
+  return getIndexArraySize()*sizeof(GLushort);
 }
 
-auto my::Geometry::getVertexCount() const -> int {
+auto my::Geometry::getVertexCount() const -> GLint {
   return getVertexArraySize()/3;
 }
 
-auto my::Geometry::getColorCount() const -> int {
+auto my::Geometry::getColorCount() const -> GLint {
   return getColorArraySize()/3;
 }
 
-auto my::Geometry::getIndexCount() const -> int {
+auto my::Geometry::getIndexCount() const -> GLint {
   return getIndexArraySize();
 }
 
-auto my::BasicTriangle::getVertices() const -> const float* {
+auto my::BasicTriangle::getVertices() const -> const GLfloat* {
   return BasicTriangle_vertices.data();
 }
 
-auto my::BasicTriangle::getColors() const -> const float* {
+auto my::BasicTriangle::getColors() const -> const GLfloat* {
   return BasicTriangle_colors.data();
 }
 
-auto my::BasicTriangle::getIndices() const -> const unsigned short* {
+auto my::BasicTriangle::getIndices() const -> const GLushort* {
   return BasicTriangle_indices.data();
 }
 
-auto my::BasicTriangle::getVertexArraySize() const -> int {
+auto my::BasicTriangle::getVertexArraySize() const -> GLint {
   return BasicTriangle_vertices.size();
 }
 
-auto my::BasicTriangle::getColorArraySize() const -> int {
+auto my::BasicTriangle::getColorArraySize() const -> GLint {
   return BasicTriangle_colors.size();
 }
 
-auto my::BasicTriangle::getIndexArraySize() const -> int {
+auto my::BasicTriangle::getIndexArraySize() const -> GLint {
   return BasicTriangle_indices.size();
 }

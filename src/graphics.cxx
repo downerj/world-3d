@@ -6,14 +6,16 @@
 #include <stdexcept>
 #include <string>
 
-#define GLAD_GL_IMPLEMENTATION
-#include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include "debug.hxx"
 #include "io.hxx"
 #include "models.hxx"
+
+// Include this last to avoid One Definition Rule (ODR) violations.
+#define GLAD_GL_IMPLEMENTATION
+#include <glad/gl.h>
 
 /*
  * Declarations.
@@ -24,7 +26,7 @@ namespace {
 #ifdef DEBUG
 auto debugMessageCallbackGL(
   GLenum source, GLenum type, GLuint id, GLenum severity,
-  GLsizei length, const GLchar* message, const void* userParam
+  GLsizei length, const GLchar* message, const GLvoid* userParam
 ) -> void;
 #endif // DEBUG
 auto initializeGL() -> bool;
@@ -117,7 +119,7 @@ namespace {
 #ifdef DEBUG
 auto debugMessageCallbackGL(
   GLenum /*source*/, GLenum /*type*/, GLuint /*id*/, GLenum /*severity*/,
-  GLsizei /*length*/, const GLchar* message, const void* /*userParam*/
+  GLsizei /*length*/, const GLchar* message, const GLvoid* /*userParam*/
 ) -> void {
   LOG_ERROR("GL error: " << message << '\n');
 }
