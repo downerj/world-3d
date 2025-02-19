@@ -102,6 +102,85 @@ my::ShaderAttribute::ShaderAttribute(
 ) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
     normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
 
+auto my::operator<<(VertexArrayBuilder& builder, ShaderProgram* program)
+-> VertexArrayBuilder& {
+  builder._program = program;
+  return builder;
+}
+
+auto my::operator<<(VertexArrayBuilder& builder, ShaderAttribute* attribute)
+-> VertexArrayBuilder& {
+  builder._attributes.push_back(attribute);
+  return builder;
+}
+
+auto my::operator<<(VertexArrayBuilder& builder, Buffer* buffer)
+-> VertexArrayBuilder& {
+  builder._indexBuffer = buffer;
+  return builder;
+}
+
+auto my::VertexArrayBuilder::setIndexCount(GLint indexCount) -> void {
+#ifdef DEBUG
+  if (indexCount <= 0) {
+    throw std::runtime_error{
+      "Attempt to set invalid index count on vertex array builder"
+    };
+  }
+#endif // DEBUG
+  _indexCount = indexCount;
+}
+
+auto my::VertexArrayBuilder::build() -> VertexArray {
+#ifdef DEBUG
+  if (_indexCount <= 0) {
+    throw std::runtime_error{
+      "Attempt to build vertex array with invalid/missing index count"
+    };
+  }
+#endif // DEBUG
+
+  GLuint id;
+  glGenVertexArrays(1, &id);
+  glBindVertexArray(id);
+
+  for (const auto attribute : _attributes) {
+#ifdef DEBUG
+    if (!_program) {
+      throw std::runtime_error{
+        "Attempt to build vertex array using attributes and missing shader program"
+      };
+    }
+#endif // DEBUG
+    const GLint location{glGetAttribLocation(
+      _program->getID(), attribute->name.data()
+    )};
+    attribute->buffer.bind();
+    glVertexAttribPointer(
+      location, attribute->size, static_cast<GLenum>(attribute->type),
+      attribute->normalized, attribute->stride, attribute->pointer
+    );
+    glEnableVertexAttribArray(location);
+  }
+
+  if (_indexBuffer) {
+    _indexBuffer->bind();
+  }
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+  _program = nullptr;
+  _attributes.clear();
+  _indexBuffer = nullptr;
+
+  return {id, _indexCount};
+}
+
+my::VertexArray::VertexArray(GLuint id, GLsizei indexCount)
+: _id{id}, _indexCount{indexCount} {}
+
 my::VertexArray::VertexArray(VertexArray&& vao)
 : _id{vao._id}, _indexCount{vao._indexCount} {
   LOG_MOVING(vao);

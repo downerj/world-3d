@@ -64,22 +64,21 @@ my::GraphicsEngine::GraphicsEngine() {
     BufferTarget::ElementArray, geometry->getIndices(),
     static_cast<GLsizei>(geometry->getIndexMemorySize())
   };
-  std::vector<ShaderAttribute> attributes{{
+  ShaderAttribute positionAttribute{
     "position", positionBuffer, geometry->getVertexCount(),
     AttributeType::Float, false, 0, nullptr
-  }, {
+  };
+  ShaderAttribute colorAttribute{
     "color", colorBuffer, geometry->getColorCount(),
     AttributeType::Float, false, 0, nullptr
-  }};
-  VertexArray vao{
-    program, attributes, indexBuffer,
-    geometry->getIndexCount()
   };
-  std::vector<VertexArray>& vertexArrays{
-    program.getVertexArrays()
-  };
-  vertexArrays.reserve(1);
-  vertexArrays.push_back(std::move(vao));
+  VertexArrayBuilder vaoBuilder{};
+  vaoBuilder.setIndexCount(geometry->getIndexCount());
+  vaoBuilder << &program << &indexBuffer;
+  vaoBuilder << &positionAttribute << &colorAttribute;
+  VertexArray vao{vaoBuilder.build()};
+  program.getVertexArrays().reserve(1);
+  program.getVertexArrays().push_back(std::move(vao));
   _programs.reserve(1);
   _programs.push_back(std::move(program));
   _buffers.reserve(3);

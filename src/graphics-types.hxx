@@ -87,15 +87,36 @@ struct ShaderAttribute {
   ShaderAttribute() = delete;
 };
 
+class VertexArray;
+
+class VertexArrayBuilder {
+public:
+  friend auto operator<<(VertexArrayBuilder&, ShaderProgram*)
+  -> VertexArrayBuilder&;
+  friend auto operator<<(VertexArrayBuilder&, ShaderAttribute*)
+  -> VertexArrayBuilder&;
+  friend auto operator<<(VertexArrayBuilder&, Buffer*)
+  -> VertexArrayBuilder&;
+  auto setIndexCount(GLint indexCount) -> void;
+  auto build() -> VertexArray;
+
+private:
+  ShaderProgram* _program{nullptr};
+  std::vector<ShaderAttribute*> _attributes{};
+  Buffer* _indexBuffer{nullptr};
+  GLint _indexCount{-1};
+};
+
+auto operator<<(VertexArrayBuilder& builder, ShaderProgram* program)
+-> VertexArrayBuilder&;
+auto operator<<(VertexArrayBuilder& builder, ShaderAttribute* attribute)
+-> VertexArrayBuilder&;
+auto operator<<(VertexArrayBuilder& builder, Buffer* buffer)
+-> VertexArrayBuilder&;
+
 class VertexArray {
 public:
-  template<typename Container>
-  VertexArray(
-    const ShaderProgram& program,
-    const Container& attributes,
-    const Buffer& indexBuffer,
-    GLsizei indexCount
-  );
+  VertexArray(GLuint id, GLsizei indexCount);
   VertexArray() = delete;
   VertexArray(const VertexArray&) = delete;
   VertexArray(VertexArray&& vao);
@@ -180,38 +201,5 @@ auto operator<<(std::ostream& out, const ShaderProgram& program)
 #endif // DEBUG
 
 } // namespace my
-
-/*
- * Definitions.
- */
-
-template<typename Container>
-my::VertexArray::VertexArray(
-  const ShaderProgram& program,
-  const Container& attributes,
-  const Buffer& indexBuffer,
-  GLsizei indexCount
-) : _indexCount{indexCount} {
-  glGenVertexArrays(1, &_id);
-  glBindVertexArray(_id);
-
-  for (const auto& attribute : attributes) {
-    const GLint location{glGetAttribLocation(
-      program.getID(), attribute.name.data()
-    )};
-    attribute.buffer.bind();
-    glVertexAttribPointer(
-      location, attribute.size, static_cast<GLenum>(attribute.type),
-      attribute.normalized, attribute.stride, attribute.pointer
-    );
-    glEnableVertexAttribArray(location);
-  }
-
-  indexBuffer.bind();
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
 
 #endif // GRAPHICS_TYPES_HXX
