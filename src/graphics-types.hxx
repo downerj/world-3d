@@ -42,7 +42,7 @@ public:
   auto operator=(Buffer&& buffer) -> Buffer&;
   ~Buffer() noexcept;
 #ifdef DEBUG
-  friend auto operator<<(std::ostream& out, const Buffer& buffer)
+  friend auto operator<<(std::ostream&, const Buffer&)
   -> std::ostream&;
 #endif // DEBUG
   auto getID() const -> GLuint;
@@ -103,8 +103,7 @@ public:
   auto operator=(VertexArray&& vao) -> VertexArray&;
   ~VertexArray() noexcept;
 #ifdef DEBUG
-  friend auto operator<<(std::ostream& out, const VertexArray& vao)
-  -> std::ostream&;
+  friend auto operator<<(std::ostream&, const VertexArray&) -> std::ostream&;
 #endif // DEBUG
   auto getID() const -> GLuint;
   auto getIndexCount() const -> GLsizei;
@@ -137,8 +136,7 @@ public:
   auto operator=(const Shader&) -> Shader& = delete;
   auto operator=(Shader&& shader) -> Shader&;
 #ifdef DEBUG
-  friend auto operator<<(std::ostream& out, const Shader& shader)
-  -> std::ostream&;
+  friend auto operator<<(std::ostream&, const Shader&) -> std::ostream&;
 #endif // DEBUG
   auto getType() const -> ShaderType;
   auto getID() const -> GLuint;
@@ -163,8 +161,7 @@ public:
   auto operator=(ShaderProgram&& program) -> ShaderProgram&;
   ~ShaderProgram() noexcept;
 #ifdef DEBUG
-  friend auto operator<<(std::ostream& out, const ShaderProgram& program)
-  -> std::ostream&;
+  friend auto operator<<(std::ostream&, const ShaderProgram&) -> std::ostream&;
 #endif // DEBUG
   auto getID() const -> GLuint;
   auto getVertexArrays() const -> const std::vector<VertexArray>&;
