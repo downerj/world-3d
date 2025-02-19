@@ -6,6 +6,18 @@
 #include "debug.hxx"
 #include "models.hxx"
 
+#ifdef DEBUG
+#define LOG_ERROR_INVALID(x) LOG_ERROR("Invalid " << x << '\n')
+#define LOG_MOVING(x) LOG("Moving " << x << '\n')
+#define LOG_MOVE_ASSIGNING(x) LOG("Move-assigning " << x << '\n')
+#define LOG_CLEANING_UP(x) LOG("Cleaning up " << x << '\n')
+#else
+#define LOG_ERROR_INVALID(x)
+#define LOG_MOVING(x)
+#define LOG_MOVE_ASSIGNING(x)
+#define LOG_CLEANING_UP(x)
+#endif // DEBUG
+
 /*
  * Definitions.
  */
@@ -22,12 +34,12 @@ my::Buffer::Buffer(
 
 my::Buffer::Buffer(Buffer&& buffer)
 : _target{buffer._target}, _id{buffer._id} {
-  LOG("Moving " << *this << '\n');
+  LOG_MOVING(buffer);
   buffer._valid = false;
 }
 
 auto my::Buffer::operator=(Buffer&& buffer) -> Buffer& {
-  LOG("Move-assigning " << *this << '\n');
+  LOG_MOVE_ASSIGNING(buffer);
   _target = buffer._target;
   _id = buffer._id;
   buffer._valid = false;
@@ -38,7 +50,7 @@ my::Buffer::~Buffer() {
   if (!_valid) {
     return;
   }
-  LOG("Cleaning up " << *this << '\n');
+  LOG_CLEANING_UP(*this);
   glDeleteBuffers(1, &_id);
 }
 
@@ -70,6 +82,12 @@ auto my::Buffer::getID() const -> GLuint {
 }
 
 auto my::Buffer::bind() const -> void {
+#ifdef DEBUG
+  if (!_valid) {
+    LOG_ERROR_INVALID(*this);
+    throw std::runtime_error{"Attempt to bind invalid buffer"};
+  }
+#endif // DEBUG
   glBindBuffer(static_cast<GLenum>(_target), _id);
 }
 
@@ -86,12 +104,12 @@ my::ShaderAttribute::ShaderAttribute(
 
 my::VertexArray::VertexArray(VertexArray&& vao)
 : _id{vao._id}, _indexCount{vao._indexCount} {
-  LOG("Moving " << vao << '\n');
+  LOG_MOVING(vao);
   vao._valid = false;
 }
 
 auto my::VertexArray::operator=(VertexArray&& vao) -> VertexArray& {
-  LOG("Move-assigning " << vao << '\n');
+  LOG_MOVE_ASSIGNING(vao);
   _id = vao._id;
   _indexCount = vao._indexCount;
   vao._valid = false;
@@ -102,7 +120,7 @@ my::VertexArray::~VertexArray() {
   if (!_valid) {
     return;
   }
-  LOG("Cleaning up " << *this << '\n');
+  LOG_CLEANING_UP(*this);
   glDeleteVertexArrays(1, &_id);
 }
 
@@ -124,6 +142,12 @@ auto my::VertexArray::getIndexCount() const -> GLsizei {
 }
 
 auto my::VertexArray::bind() const -> void {
+#ifdef DEBUG
+  if (!_valid) {
+    LOG_ERROR_INVALID(*this);
+    throw std::runtime_error{"Attempt to bind invalid vertex array"};
+  }
+#endif // DEBUG
   glBindVertexArray(_id);
 }
 
@@ -141,12 +165,12 @@ my::Shader::Shader(
 }
 
 my::Shader::Shader(Shader&& shader) : _type{shader._type}, _id{shader._id} {
-  LOG("Moving " << shader << '\n');
+  LOG_MOVING(shader);
   shader._valid = false;
 }
 
 auto my::Shader::operator=(Shader&& shader) -> Shader& {
-  LOG("Move-assigning " << shader << '\n');
+  LOG_MOVE_ASSIGNING(shader);
   _type = shader._type;
   _id = shader._id;
   shader._valid = false;
@@ -157,7 +181,7 @@ my::Shader::~Shader() {
   if (!_valid) {
     return;
   }
-  LOG("Cleaning up " << *this << '\n');
+  LOG_CLEANING_UP(*this);
   glDeleteShader(_id);
 }
 
@@ -207,14 +231,14 @@ my::ShaderProgram::ShaderProgram(
     glGetProgramiv(_id, GL_INFO_LOG_LENGTH, &logLength);
     log.resize(logLength);
     glGetProgramInfoLog(_id, logLength, nullptr, log.data());
-    std::cerr << "GL program error: " << log << '\n';
+    LOG_ERROR("GL program error: " << log << '\n');
     log.clear();
 
     glGetShaderiv(vertexShader.getID(), GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 0) {
       log.resize(logLength);
       glGetShaderInfoLog(vertexShader.getID(), logLength, nullptr, log.data());
-      std::cerr << "GL vertex shader error: " << log << '\n';
+      LOG_ERROR("GL vertex shader error: " << log << '\n');
       log.clear();
     }
 
@@ -224,7 +248,7 @@ my::ShaderProgram::ShaderProgram(
       glGetShaderInfoLog(
         fragmentShader.getID(), logLength, nullptr, log.data()
       );
-      std::cerr << "GL fragment shader error: " << log << '\n';
+      LOG_ERROR("GL fragment shader error: " << log << '\n');
       log.clear();
     }
   }
@@ -239,12 +263,12 @@ my::ShaderProgram::ShaderProgram(
 
 my::ShaderProgram::ShaderProgram(ShaderProgram&& program)
 : _id{program._id}, _vertexArrays{std::move(program._vertexArrays)} {
-  LOG("Moving " << program << '\n');
+  LOG_MOVING(program);
   program._valid = false;
 }
 
 auto my::ShaderProgram::operator=(ShaderProgram&& program) -> ShaderProgram& {
-  LOG("Move-assigning " << program << '\n');
+  LOG_MOVE_ASSIGNING(program);
   _id = program._id;
   _vertexArrays = std::move(program._vertexArrays);
   program._valid = false;
@@ -255,7 +279,7 @@ my::ShaderProgram::~ShaderProgram() {
   if (!_valid) {
     return;
   }
-  LOG("Cleaning up " << *this << '\n');
+  LOG_CLEANING_UP(*this);
   glDeleteProgram(_id);
 }
 
@@ -282,5 +306,11 @@ auto my::ShaderProgram::getVertexArrays() -> std::vector<VertexArray>& {
 }
 
 auto my::ShaderProgram::use() const -> void {
+#ifdef DEBUG
+  if (!_valid) {
+    LOG_ERROR_INVALID(*this);
+    throw std::runtime_error{"Attempt to use invalid shader program"};
+  }
+#endif // DEBUG
   glUseProgram(_id);
 }
