@@ -16,8 +16,6 @@
 
 namespace my {
 
-constexpr auto degreesToRadians(float degrees) -> float;
-
 class GraphicsEngine {
 public:
   GraphicsEngine();
@@ -34,18 +32,10 @@ private:
   int _windowHeight{};
   std::vector<ShaderProgram> _programs{};
   std::vector<Buffer> _buffers{};
-  // Camera _camera{static_cast<float>(M_PI), 1.f, 0.1f, 100.f};
+  // Camera _camera{glm::radians(90.f), 1.f, 0.1f, 100.f};
   Camera _camera{};
 };
 
 } // namespace my
-
-/*
- * Definitions.
- */
-
-constexpr auto my::degreesToRadians(float degrees) -> float {
-  return static_cast<float>(M_PI) * degrees / 180.f;
-}
 
 #endif // GRAPHICS_HXX
