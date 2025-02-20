@@ -294,6 +294,46 @@ auto my::Shader::getID() const -> GLuint {
   return _id;
 }
 
+my::Uniform::Uniform(const ShaderProgram& program, std::string_view name)
+: _location{glGetUniformLocation(program.getID(), name.data())} {
+  if (_location < 0) {
+    throw std::runtime_error{
+      "Attempt to get location for invalid uniform"
+    };
+  }
+}
+
+my::Uniform::Uniform(Uniform&& uniform) : _location{uniform._location} {
+  LOG_MOVING(*this);
+  uniform._valid = false;
+}
+
+auto my::Uniform::operator=(Uniform&& uniform) -> Uniform& {
+  LOG_MOVE_ASSIGNING(*this);
+  _location = uniform._location;
+  uniform._valid = false;
+  return *this;
+}
+
+my::Uniform::~Uniform() {
+  if (!_valid) {
+    return;
+  }
+  LOG_CLEANING_UP(*this);
+}
+
+#ifdef DEBUG
+auto my::operator<<(std::ostream& out, const Uniform& uniform)
+-> std::ostream& {
+  out << "Uniform(location=" << uniform._location << ")";
+  return out;
+}
+#endif // DEBUG
+
+auto my::Uniform::getLocation() const -> GLint {
+  return _location;
+}
+
 my::ShaderProgram::ShaderProgram(
   const Shader& vertexShader, const Shader& fragmentShader
 ) : _id{glCreateProgram()} {
@@ -341,7 +381,8 @@ my::ShaderProgram::ShaderProgram(
 }
 
 my::ShaderProgram::ShaderProgram(ShaderProgram&& program)
-: _id{program._id}, _vertexArrays{std::move(program._vertexArrays)} {
+: _id{program._id}, _vertexArrays{std::move(program._vertexArrays)},
+  _uniforms{std::move(program._uniforms)} {
   LOG_MOVING(program);
   program._valid = false;
 }
@@ -350,6 +391,7 @@ auto my::ShaderProgram::operator=(ShaderProgram&& program) -> ShaderProgram& {
   LOG_MOVE_ASSIGNING(program);
   _id = program._id;
   _vertexArrays = std::move(program._vertexArrays);
+  _uniforms = std::move(program._uniforms);
   program._valid = false;
   return *this;
 }
@@ -382,6 +424,14 @@ auto my::ShaderProgram::getVertexArrays() const
 
 auto my::ShaderProgram::getVertexArrays() -> std::vector<VertexArray>& {
   return _vertexArrays;
+}
+
+auto my::ShaderProgram::getUniforms() const -> const std::vector<Uniform>& {
+  return _uniforms;
+}
+
+auto my::ShaderProgram::getUniforms() -> std::vector<Uniform>& {
+  return _uniforms;
 }
 
 auto my::ShaderProgram::use() const -> void {

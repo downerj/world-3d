@@ -1,7 +1,7 @@
 #include "graphics.hxx"
 
 #include <array>
-#include <initializer_list>
+#include <cmath>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -77,8 +77,13 @@ my::GraphicsEngine::GraphicsEngine() {
   vaoBuilder << &program << &indexBuffer;
   vaoBuilder << &positionAttribute << &colorAttribute;
   VertexArray vao{vaoBuilder.build()};
-  program.getVertexArrays().reserve(1);
-  program.getVertexArrays().push_back(std::move(vao));
+  std::vector<VertexArray>& vertexArrays{program.getVertexArrays()};
+  vertexArrays.reserve(1);
+  vertexArrays.push_back(std::move(vao));
+  std::vector<Uniform>& uniforms{program.getUniforms()};
+  uniforms.reserve(2);
+  uniforms.push_back({program, "projection"});
+  uniforms.push_back({program, "view"});
   _programs.reserve(1);
   _programs.push_back(std::move(program));
   _buffers.reserve(3);
@@ -98,6 +103,16 @@ auto my::GraphicsEngine::render() -> void {
   glClear(GL_COLOR_BUFFER_BIT);
   for (const auto& program : _programs) {
     program.use();
+    const Uniform& projectionUniform{program.getUniforms().at(0)};
+    const Uniform& viewUniform{program.getUniforms().at(1)};
+    glUniformMatrix4fv(
+      projectionUniform.getLocation(), 1, false,
+      _camera.getProjectionMatrixPointer()
+    );
+    glUniformMatrix4fv(
+      viewUniform.getLocation(), 1, false,
+      _camera.getViewMatrixPointer()
+    );
     for (const auto& vao : program.getVertexArrays()) {
       vao.bind();
       glDrawElements(

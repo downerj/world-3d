@@ -7,6 +7,7 @@
 
 #include <glad/gl.h>
 
+#include "camera.hxx"
 #include "graphics-types.hxx"
 
 /*
@@ -14,6 +15,8 @@
  */
 
 namespace my {
+
+constexpr auto degreesToRadians(float degrees) -> float;
 
 class GraphicsEngine {
 public:
@@ -31,8 +34,18 @@ private:
   int _windowHeight{};
   std::vector<ShaderProgram> _programs{};
   std::vector<Buffer> _buffers{};
+  // Camera _camera{static_cast<float>(M_PI), 1.f, 0.1f, 100.f};
+  Camera _camera{};
 };
 
 } // namespace my
+
+/*
+ * Definitions.
+ */
+
+constexpr auto my::degreesToRadians(float degrees) -> float {
+  return static_cast<float>(M_PI) * degrees / 180.f;
+}
 
 #endif // GRAPHICS_HXX

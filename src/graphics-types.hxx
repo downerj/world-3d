@@ -172,6 +172,29 @@ private:
 auto operator<<(std::ostream& out, const Shader& shader) -> std::ostream&;
 #endif // DEBUG
 
+class Uniform {
+public:
+  Uniform(const ShaderProgram& program, std::string_view name);
+  Uniform() = delete;
+  Uniform(const Uniform& uniform) = delete;
+  Uniform(Uniform&& uniform);
+  auto operator=(const Uniform& uniform) -> Uniform& = delete;
+  auto operator=(Uniform&& uniform) -> Uniform&;
+  ~Uniform() noexcept;
+#ifdef DEBUG
+  friend auto operator<<(std::ostream&, const Uniform&) -> std::ostream&;
+#endif // DEBUG
+  auto getLocation() const -> GLint;
+
+private:
+  GLint _location;
+  bool _valid{true};
+};
+
+#ifdef DEBUG
+auto operator<<(std::ostream& out, const Uniform& uniform) -> std::ostream&;
+#endif // DEBUG
+
 class ShaderProgram {
 public:
   ShaderProgram(const Shader& vertex, const Shader& fragment);
@@ -187,11 +210,14 @@ public:
   auto getID() const -> GLuint;
   auto getVertexArrays() const -> const std::vector<VertexArray>&;
   auto getVertexArrays() -> std::vector<VertexArray>&;
+  auto getUniforms() const -> const std::vector<Uniform>&;
+  auto getUniforms() -> std::vector<Uniform>&;
   auto use() const -> void;
 
 private:
   GLuint _id;
   std::vector<VertexArray> _vertexArrays{};
+  std::vector<Uniform> _uniforms{};
   bool _valid{true};
 };
 
