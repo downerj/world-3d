@@ -5,7 +5,13 @@
 my::Camera::Camera() {}
 
 my::Camera::Camera(float fovy, float aspect, float zNear, float zFar)
-: _projectionMatrix{glm::perspective(fovy, aspect, zNear, zFar)} {}
+: _projectionMatrix{glm::perspective(fovy, aspect, zNear, zFar)},
+  _fovy{fovy}, _aspect{aspect}, _zNear{zNear}, _zFar{zFar} {}
+
+auto my::Camera::setAspectRatio(float aspect) -> void {
+  _aspect = aspect;
+  _projectionMatrix = glm::perspective(_fovy, _aspect, _zNear, _zFar);
+}
 
 auto my::Camera::setX(float x) -> void {
   _viewMatrix[3][0] = -x;

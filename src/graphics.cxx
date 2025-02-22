@@ -106,6 +106,9 @@ auto my::GraphicsEngine::getCamera() -> Camera& {
 auto my::GraphicsEngine::resize(int width, int height) -> void {
   _windowWidth = width;
   _windowHeight = height;
+  _camera.setAspectRatio(
+    static_cast<float>(width) / static_cast<float>(height)
+  );
 }
 
 auto my::GraphicsEngine::render() -> void {

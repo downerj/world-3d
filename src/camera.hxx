@@ -11,6 +11,7 @@ public:
   Camera();
   Camera(float fovy, float aspect, float zNear, float zFar);
 
+  auto setAspectRatio(float aspect) -> void;
   auto setX(float x) -> void;
   auto setY(float y) -> void;
   auto setZ(float z) -> void;
@@ -32,6 +33,10 @@ private:
   glm::mat4 _projectionMatrix{1.};
   glm::mat4 _viewMatrix{1.};
   glm::vec3 _translateVector{};
+  float _fovy;
+  float _aspect;
+  float _zNear;
+  float _zFar;
 };
 
 } // namespace my
