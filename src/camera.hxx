@@ -11,6 +11,10 @@ public:
   Camera();
   Camera(float fovy, float aspect, float zNear, float zFar);
 
+  auto setX(float x) -> void;
+  auto setY(float y) -> void;
+  auto setZ(float z) -> void;
+  auto setPosition(float x, float y, float z) -> void;
   auto moveX(float dx) -> void;
   auto moveY(float dy) -> void;
   auto moveZ(float dz) -> void;
@@ -18,6 +22,7 @@ public:
   auto roll(float dax) -> void;
   auto yaw(float day) -> void;
   auto pitch(float daz) -> void;
+  auto update() -> void;
   auto getProjectionMatrix() const -> const glm::mat4&;
   auto getViewMatrix() const -> const glm::mat4&;
   auto getProjectionMatrixPointer() const -> const glm::mat4::value_type*;

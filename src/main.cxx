@@ -15,7 +15,8 @@ auto main(int /*argc*/, char** /*argv*/) -> int {
     my::WindowHandler window{};
     my::GraphicsEngine graphics{};
     LOG("Begin main loop\n");
-    graphics.getCamera().move(2., 2., 2.);
+    my::Camera& camera{graphics.getCamera()};
+    camera.setPosition(2., 2., 2.);
     while (window.isActive()) {
       const my::WindowActions& actions{window.getActions()};
       if (actions.close) {

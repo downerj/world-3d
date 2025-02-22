@@ -112,6 +112,7 @@ auto my::GraphicsEngine::render() -> void {
   glViewport(0, 0, _windowWidth, _windowHeight);
   glClearColor(0., .5, 1., 1.);
   glClear(GL_COLOR_BUFFER_BIT);
+  _camera.update();
   glm::mat4 _modelMatrix{1.};
   for (const auto& program : _programs) {
     program.use();
