@@ -26,6 +26,7 @@ public:
 private:
   glm::mat4 _projectionMatrix{1.};
   glm::mat4 _viewMatrix{1.};
+  glm::vec3 _translateVector{};
 };
 
 } // namespace my

@@ -9,9 +9,9 @@
 namespace {
 
 constexpr std::array<GLfloat, 3*3> BasicTriangle_vertices{
-  1., -1., 1.,
-  -1., -1., 1.,
-  0., 1., 1.
+  1., -1., -1.,
+  -1., -1., -1.,
+  0., 1., -1.
 };
 
 constexpr std::array<GLfloat, 3*3> BasicTriangle_colors{

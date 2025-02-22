@@ -95,6 +95,14 @@ my::GraphicsEngine::GraphicsEngine() {
   _buffers.push_back(std::move(indexBuffer));
 }
 
+auto my::GraphicsEngine::getCamera() const -> const Camera& {
+  return _camera;
+}
+
+auto my::GraphicsEngine::getCamera() -> Camera& {
+  return _camera;
+}
+
 auto my::GraphicsEngine::resize(int width, int height) -> void {
   _windowWidth = width;
   _windowHeight = height;

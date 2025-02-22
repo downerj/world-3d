@@ -24,6 +24,8 @@ public:
   GraphicsEngine& operator=(const GraphicsEngine&) = delete;
   GraphicsEngine& operator=(GraphicsEngine&&) = delete;
 
+  auto getCamera() const -> const Camera&;
+  auto getCamera() -> Camera&;
   auto resize(int width, int height) -> void;
   auto render() -> void;
 
@@ -32,8 +34,8 @@ private:
   int _windowHeight{};
   std::vector<ShaderProgram> _programs{};
   std::vector<Buffer> _buffers{};
-  // Camera _camera{glm::radians(90.f), 1.f, 0.1f, 100.f};
-  Camera _camera{};
+  Camera _camera{glm::radians(90.f), 1.f, 0.1f, 100.f};
+  // Camera _camera{};
 };
 
 } // namespace my
