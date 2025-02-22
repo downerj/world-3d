@@ -24,18 +24,8 @@ public:
   auto getViewMatrixPointer() const -> const glm::mat4::value_type*;
 
 private:
-  glm::mat4 _projectionMatrix{
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  };
-  glm::mat4 _viewMatrix{
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  };
+  glm::mat4 _projectionMatrix{1.};
+  glm::mat4 _viewMatrix{1.};
 };
 
 } // namespace my
