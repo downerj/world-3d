@@ -9,6 +9,8 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "debug.hxx"
 #include "io.hxx"
@@ -81,9 +83,10 @@ my::GraphicsEngine::GraphicsEngine() {
   vertexArrays.reserve(1);
   vertexArrays.push_back(std::move(vao));
   std::vector<Uniform>& uniforms{program.getUniforms()};
-  uniforms.reserve(2);
+  uniforms.reserve(3);
   uniforms.push_back({program, "projection"});
   uniforms.push_back({program, "view"});
+  uniforms.push_back({program, "model"});
   _programs.reserve(1);
   _programs.push_back(std::move(program));
   _buffers.reserve(3);
@@ -101,10 +104,12 @@ auto my::GraphicsEngine::render() -> void {
   glViewport(0, 0, _windowWidth, _windowHeight);
   glClearColor(0., .5, 1., 1.);
   glClear(GL_COLOR_BUFFER_BIT);
+  glm::mat4 _modelMatrix{1.};
   for (const auto& program : _programs) {
     program.use();
     const Uniform& projectionUniform{program.getUniforms().at(0)};
     const Uniform& viewUniform{program.getUniforms().at(1)};
+    const Uniform& modelUniform{program.getUniforms().at(2)};
     glUniformMatrix4fv(
       projectionUniform.getLocation(), 1, false,
       _camera.getProjectionMatrixPointer()
@@ -115,6 +120,10 @@ auto my::GraphicsEngine::render() -> void {
     );
     for (const auto& vao : program.getVertexArrays()) {
       vao.bind();
+      glUniformMatrix4fv(
+        modelUniform.getLocation(), 1, false,
+        glm::value_ptr(_modelMatrix)
+      );
       glDrawElements(
         GL_TRIANGLES, vao.getIndexCount(), GL_UNSIGNED_SHORT, nullptr
       );
