@@ -86,7 +86,14 @@ auto my::WindowHandler::resetSize() -> void {
 }
 
 auto my::WindowHandler::preRender() -> void {
-  glfwGetFramebufferSize(_window, &_width, &_height);
+  int width;
+  int height;
+  glfwGetFramebufferSize(_window, &width, &height);
+  if (width != _width || height != _height) {
+    _actions.resize = true;
+  }
+  _width = width;
+  _height = height;
 }
 
 auto my::WindowHandler::postRender() -> void {
@@ -97,6 +104,7 @@ auto my::WindowHandler::postRender() -> void {
 auto my::WindowHandler::resetActions() -> void {
   _actions.close = false;
   _actions.resetSize = false;
+  _actions.resize = false;
   _actions.pauseResume = false;
 }
 
@@ -133,6 +141,7 @@ auto my::WindowHandler::onKey(int key, int action, int mods) -> void {
     _actions.close = true;
   } else if (resetWindowKey) {
     _actions.resetSize = true;
+    _actions.resize = true;
   } else if (pauseResumeKey) {
     _actions.pauseResume = true;
   }

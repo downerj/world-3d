@@ -95,27 +95,22 @@ my::GraphicsEngine::GraphicsEngine() {
   _buffers.push_back(std::move(indexBuffer));
 }
 
-auto my::GraphicsEngine::getCamera() const -> const Camera& {
-  return _camera;
-}
-
-auto my::GraphicsEngine::getCamera() -> Camera& {
-  return _camera;
+auto my::GraphicsEngine::setCamera(const Camera* camera) -> void {
+  _camera = camera;
 }
 
 auto my::GraphicsEngine::resize(int width, int height) -> void {
   _windowWidth = width;
   _windowHeight = height;
-  _camera.setAspectRatio(
-    static_cast<float>(width) / static_cast<float>(height)
-  );
 }
 
 auto my::GraphicsEngine::render() -> void {
+  if (!_camera) {
+    return;
+  }
   glViewport(0, 0, _windowWidth, _windowHeight);
   glClearColor(0., .5, 1., 1.);
   glClear(GL_COLOR_BUFFER_BIT);
-  _camera.update();
   glm::mat4 _modelMatrix{1.};
   for (const auto& program : _programs) {
     program.use();
@@ -124,11 +119,11 @@ auto my::GraphicsEngine::render() -> void {
     const Uniform& modelUniform{program.getUniforms().at(2)};
     glUniformMatrix4fv(
       projectionUniform.getLocation(), 1, false,
-      _camera.getProjectionMatrixPointer()
+      _camera->getProjectionMatrixPointer()
     );
     glUniformMatrix4fv(
       viewUniform.getLocation(), 1, false,
-      _camera.getViewMatrixPointer()
+      _camera->getViewMatrixPointer()
     );
     for (const auto& vao : program.getVertexArrays()) {
       vao.bind();

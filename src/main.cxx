@@ -6,19 +6,20 @@
 #include <string>
 
 #include "debug.hxx"
+#include "game.hxx"
 #include "graphics.hxx"
 #include "io.hxx"
 #include "window.hxx"
 
 auto main(int /*argc*/, char** /*argv*/) -> int {
   try {
+    my::Game game{};
     my::WindowHandler window{};
     my::GraphicsEngine graphics{};
+    graphics.setCamera(&game.getCamera());
+    const my::WindowActions& actions{window.getActions()};
     LOG("Begin main loop\n");
-    my::Camera& camera{graphics.getCamera()};
-    camera.setPosition(2., 2., 2.);
     while (window.isActive()) {
-      const my::WindowActions& actions{window.getActions()};
       if (actions.close) {
         window.close();
         break;
@@ -26,9 +27,16 @@ auto main(int /*argc*/, char** /*argv*/) -> int {
       if (actions.resetSize) {
         window.resetSize();
       }
+      if (actions.resize) {
+        const int width{window.getWidth()};
+        const int height{window.getHeight()};
+        graphics.resize(width, height);
+        game.getCamera().setAspectRatio(width, height);
+      }
       window.resetActions();
       window.preRender();
-      graphics.resize(window.getWidth(), window.getHeight());
+      game.tick();
+      game.getCamera().update();
       graphics.render();
       window.postRender();
     }

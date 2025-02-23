@@ -14,6 +14,7 @@ namespace my {
 struct WindowActions {
   bool close{false};
   bool resetSize{false};
+  bool resize{false};
   bool pauseResume{false};
 };
 

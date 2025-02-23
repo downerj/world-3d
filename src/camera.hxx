@@ -8,10 +8,10 @@ namespace my {
 
 class Camera {
 public:
-  Camera();
   Camera(float fovy, float aspect, float zNear, float zFar);
 
   auto setAspectRatio(float aspect) -> void;
+  auto setAspectRatio(int width, int height) -> void;
   auto setX(float x) -> void;
   auto setY(float y) -> void;
   auto setZ(float z) -> void;

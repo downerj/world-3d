@@ -2,14 +2,17 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-my::Camera::Camera() {}
-
 my::Camera::Camera(float fovy, float aspect, float zNear, float zFar)
 : _projectionMatrix{glm::perspective(fovy, aspect, zNear, zFar)},
   _fovy{fovy}, _aspect{aspect}, _zNear{zNear}, _zFar{zFar} {}
 
 auto my::Camera::setAspectRatio(float aspect) -> void {
   _aspect = aspect;
+  _projectionMatrix = glm::perspective(_fovy, _aspect, _zNear, _zFar);
+}
+
+auto my::Camera::setAspectRatio(int width, int height) -> void {
+  _aspect = static_cast<float>(width) / static_cast<float>(height);
   _projectionMatrix = glm::perspective(_fovy, _aspect, _zNear, _zFar);
 }
 
