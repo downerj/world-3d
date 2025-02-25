@@ -2,10 +2,8 @@
 
 #include <array>
 #include <cmath>
-#include <memory>
 #include <stdexcept>
 #include <string>
-#include <utility>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -41,7 +39,8 @@ my::GraphicsEngine::GraphicsEngine() {
     throw std::runtime_error{"Failed to initialize OpenGL"};
   }
 
-  const std::unique_ptr<Geometry> geometry{std::make_unique<BasicTriangle>()};
+  BasicTriangle triangle{};
+  Geometry& geometry{triangle};
   std::optional<std::string> vertexSource{readFile(
     "res/shaders/main.vert"
   )};
@@ -55,27 +54,27 @@ my::GraphicsEngine::GraphicsEngine() {
   Shader fragmentShader{ShaderType::Fragment, *fragmentSource};
   ShaderProgram program{vertexShader, fragmentShader};
   Buffer positionBuffer{
-    BufferTarget::Array, geometry->getVertices(),
-    static_cast<GLsizei>(geometry->getVertexMemorySize())
+    BufferTarget::Array, geometry.getVertices(),
+    static_cast<GLsizei>(geometry.getVertexMemorySize())
   };
   Buffer colorBuffer{
-    BufferTarget::Array, geometry->getColors(),
-    static_cast<GLsizei>(geometry->getColorMemorySize())
+    BufferTarget::Array, geometry.getColors(),
+    static_cast<GLsizei>(geometry.getColorMemorySize())
   };
   Buffer indexBuffer{
-    BufferTarget::ElementArray, geometry->getIndices(),
-    static_cast<GLsizei>(geometry->getIndexMemorySize())
+    BufferTarget::ElementArray, geometry.getIndices(),
+    static_cast<GLsizei>(geometry.getIndexMemorySize())
   };
   ShaderAttribute positionAttribute{
-    "position", positionBuffer, geometry->getVertexCount(),
+    "position", positionBuffer, geometry.getVertexCount(),
     AttributeType::Float, false, 0, nullptr
   };
   ShaderAttribute colorAttribute{
-    "color", colorBuffer, geometry->getColorCount(),
+    "color", colorBuffer, geometry.getColorCount(),
     AttributeType::Float, false, 0, nullptr
   };
   VertexArrayBuilder vaoBuilder{};
-  vaoBuilder.setIndexCount(geometry->getIndexCount());
+  vaoBuilder.setIndexCount(geometry.getIndexCount());
   vaoBuilder << &program << &indexBuffer;
   vaoBuilder << &positionAttribute << &colorAttribute;
   VertexArray vao{vaoBuilder.build()};
