@@ -27,6 +27,11 @@ auto debugMessageCallbackGL(
 ) -> void;
 #endif // DEBUG
 auto initializeGL() -> bool;
+auto buildProgram(
+  std::string_view vertexPath, std::string_view fragmentPath
+) -> my::ShaderProgram;
+constexpr const char* mainVertexPath{"res/shaders/main.vert"};
+constexpr const char* mainFragmentPath{"res/shaders/main.frag"};
 
 } // namespace
 
@@ -34,25 +39,15 @@ auto initializeGL() -> bool;
  * Definitions.
  */
 
-my::GraphicsEngine::GraphicsEngine() {
-  if (!initializeGL()) {
+my::GraphicsEngine::GraphicsEngine()
+: _glAvailable{initializeGL()},
+  _mainProgram{buildProgram(mainVertexPath, mainFragmentPath)} {
+  if (!_glAvailable) {
     throw std::runtime_error{"Failed to initialize OpenGL"};
   }
 
   BasicTriangle triangle{};
   Geometry& geometry{triangle};
-  std::optional<std::string> vertexSource{readFile(
-    "res/shaders/main.vert"
-  )};
-  std::optional<std::string> fragmentSource{readFile(
-    "res/shaders/main.frag"
-  )};
-  if (!vertexSource || !fragmentSource) {
-    throw std::runtime_error{"Failed to load shader sources"};
-  }
-  Shader vertexShader{ShaderType::Vertex, *vertexSource};
-  Shader fragmentShader{ShaderType::Fragment, *fragmentSource};
-  ShaderProgram program{vertexShader, fragmentShader};
   Buffer positionBuffer{
     BufferTarget::Array, geometry.getVertices(),
     static_cast<GLsizei>(geometry.getVertexMemorySize())
@@ -75,20 +70,17 @@ my::GraphicsEngine::GraphicsEngine() {
   };
   VertexArrayBuilder vaoBuilder{};
   vaoBuilder.setIndexCount(geometry.getIndexCount());
-  vaoBuilder << &program << &indexBuffer;
+  vaoBuilder << &_mainProgram << &indexBuffer;
   vaoBuilder << &positionAttribute << &colorAttribute;
   VertexArray vao{vaoBuilder.build()};
-  std::vector<VertexArray>& vertexArrays{program.getVertexArrays()};
+  std::vector<VertexArray>& vertexArrays{_mainProgram.getVertexArrays()};
   vertexArrays.reserve(1);
   vertexArrays.push_back(std::move(vao));
-  std::vector<Uniform>& uniforms{program.getUniforms()};
+  std::vector<Uniform>& uniforms{_mainProgram.getUniforms()};
   uniforms.reserve(3);
-  uniforms.push_back({program, "projection"});
-  uniforms.push_back({program, "view"});
-  uniforms.push_back({program, "model"});
-  _programs.reserve(1);
-  _programs.push_back(std::move(program));
-  _buffers.reserve(3);
+  uniforms.push_back({_mainProgram, "projection"});
+  uniforms.push_back({_mainProgram, "view"});
+  uniforms.push_back({_mainProgram, "model"});
   _buffers.push_back(std::move(positionBuffer));
   _buffers.push_back(std::move(colorBuffer));
   _buffers.push_back(std::move(indexBuffer));
@@ -110,31 +102,30 @@ auto my::GraphicsEngine::render() -> void {
   glViewport(0, 0, _windowWidth, _windowHeight);
   glClearColor(0., .5, 1., 1.);
   glClear(GL_COLOR_BUFFER_BIT);
-  glm::mat4 _modelMatrix{1.};
-  for (const auto& program : _programs) {
-    program.use();
-    const Uniform& projectionUniform{program.getUniforms().at(0)};
-    const Uniform& viewUniform{program.getUniforms().at(1)};
-    const Uniform& modelUniform{program.getUniforms().at(2)};
+  glm::mat4 modelMatrix{1.};
+
+  _mainProgram.use();
+  const Uniform& projectionUniform{_mainProgram.getUniforms().at(0)};
+  const Uniform& viewUniform{_mainProgram.getUniforms().at(1)};
+  const Uniform& modelUniform{_mainProgram.getUniforms().at(2)};
+  glUniformMatrix4fv(
+    projectionUniform.getLocation(), 1, false,
+    _camera->getProjectionMatrixPointer()
+  );
+  glUniformMatrix4fv(
+    viewUniform.getLocation(), 1, false,
+    _camera->getViewMatrixPointer()
+  );
+  for (const auto& vao : _mainProgram.getVertexArrays()) {
+    vao.bind();
     glUniformMatrix4fv(
-      projectionUniform.getLocation(), 1, false,
-      _camera->getProjectionMatrixPointer()
+      modelUniform.getLocation(), 1, false,
+      glm::value_ptr(modelMatrix)
     );
-    glUniformMatrix4fv(
-      viewUniform.getLocation(), 1, false,
-      _camera->getViewMatrixPointer()
+    glDrawElements(
+      GL_TRIANGLES, vao.getIndexCount(), GL_UNSIGNED_SHORT, nullptr
     );
-    for (const auto& vao : program.getVertexArrays()) {
-      vao.bind();
-      glUniformMatrix4fv(
-        modelUniform.getLocation(), 1, false,
-        glm::value_ptr(_modelMatrix)
-      );
-      glDrawElements(
-        GL_TRIANGLES, vao.getIndexCount(), GL_UNSIGNED_SHORT, nullptr
-      );
-      vao.unbind();
-    }
+    vao.unbind();
   }
 }
 
@@ -166,6 +157,19 @@ auto initializeGL() -> bool {
   LOG("C++ version: " << STRING(__cplusplus) << '\n');
   LOG("Driver OpenGL version: " << glGetString(GL_VERSION) << '\n');
   return true;
+}
+
+auto buildProgram(
+  std::string_view vertexPath, std::string_view fragmentPath
+) -> my::ShaderProgram {
+  std::optional<std::string> vertexSource{my::readFile(vertexPath)};
+  std::optional<std::string> fragmentSource{my::readFile(fragmentPath)};
+  if (!vertexSource || !fragmentSource) {
+    throw std::runtime_error{"Failed to load shader sources"};
+  }
+  my::Shader vertexShader{my::ShaderType::Vertex, *vertexSource};
+  my::Shader fragmentShader{my::ShaderType::Fragment, *fragmentSource};
+  return {vertexShader, fragmentShader};
 }
 
 } // namespace

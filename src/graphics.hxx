@@ -29,9 +29,10 @@ public:
   auto render() -> void;
 
 private:
+  bool _glAvailable;
   int _windowWidth{};
   int _windowHeight{};
-  std::vector<ShaderProgram> _programs{};
+  ShaderProgram _mainProgram;
   std::vector<Buffer> _buffers{};
   const Camera* _camera{nullptr};
 };
