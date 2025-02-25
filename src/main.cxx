@@ -11,7 +11,7 @@
 #include "io.hxx"
 #include "window.hxx"
 
-auto main(int /*argc*/, char** /*argv*/) -> int {
+auto main(int, char**) -> int {
   try {
     my::Game game{};
     my::WindowHandler window{};

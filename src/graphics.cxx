@@ -102,7 +102,6 @@ auto my::GraphicsEngine::render() -> void {
   glViewport(0, 0, _windowWidth, _windowHeight);
   glClearColor(0., .5, 1., 1.);
   glClear(GL_COLOR_BUFFER_BIT);
-  glm::mat4 modelMatrix{1.};
 
   _mainProgram.use();
   const Uniform& projectionUniform{_mainProgram.getUniforms().at(0)};
@@ -116,6 +115,7 @@ auto my::GraphicsEngine::render() -> void {
     viewUniform.getLocation(), 1, false,
     _camera->getViewMatrixPointer()
   );
+  glm::mat4 modelMatrix{1.};
   for (const auto& vao : _mainProgram.getVertexArrays()) {
     vao.bind();
     glUniformMatrix4fv(
@@ -133,8 +133,7 @@ namespace {
 
 #ifdef DEBUG
 auto debugMessageCallbackGL(
-  GLenum /*source*/, GLenum /*type*/, GLuint /*id*/, GLenum /*severity*/,
-  GLsizei /*length*/, const GLchar* message, const GLvoid* /*userParam*/
+  GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const GLvoid*
 ) -> void {
   LOG_ERROR("GL error: " << message << '\n');
 }

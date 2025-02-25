@@ -13,9 +13,7 @@
 namespace {
 
 #ifdef DEBUG
-  auto errorCallbackGLFW(int /*error*/, const char* description) -> void {
-    LOG_ERROR("GLFW error: " << description << '\n');
-  }
+auto errorCallbackGLFW(int error, const char* description) -> void;
 #endif // DEBUG
 
 } // namespace
@@ -109,7 +107,7 @@ auto my::WindowHandler::resetActions() -> void {
 }
 
 auto my::WindowHandler::onKeyGLFW(
-  GLFWwindow* window, int key, int /*scancode*/, int action, int mods
+  GLFWwindow* window, int key, int, int action, int mods
 ) -> void {
   const auto windowHandler{
     static_cast<WindowHandler*>(glfwGetWindowUserPointer(window))
@@ -146,3 +144,13 @@ auto my::WindowHandler::onKey(int key, int action, int mods) -> void {
     _actions.pauseResume = true;
   }
 }
+
+namespace {
+
+#ifdef DEBUG
+auto errorCallbackGLFW(int, const char* description) -> void {
+  LOG_ERROR("GLFW error: " << description << '\n');
+}
+#endif // DEBUG
+
+} // namespace
