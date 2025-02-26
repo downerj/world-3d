@@ -334,6 +334,11 @@ auto my::Uniform::getLocation() const -> GLint {
   return _location;
 }
 
+template<>
+auto my::Uniform::setData(const glm::mat4& data) const -> void {
+  glUniformMatrix4fv(_location, 1, false, glm::value_ptr(data));
+}
+
 my::ShaderProgram::ShaderProgram(
   const Shader& vertexShader, const Shader& fragmentShader
 ) : _id{glCreateProgram()} {

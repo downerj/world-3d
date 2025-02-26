@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <glad/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 
 /*
  * Declarations.
@@ -185,11 +186,16 @@ public:
   friend auto operator<<(std::ostream&, const Uniform&) -> std::ostream&;
 #endif // DEBUG
   auto getLocation() const -> GLint;
+  template<typename T>
+  auto setData(const T& data) const -> void;
 
 private:
   GLint _location;
   bool _valid{true};
 };
+
+template<>
+auto Uniform::setData(const glm::mat4& data) const -> void;
 
 #ifdef DEBUG
 auto operator<<(std::ostream& out, const Uniform& uniform) -> std::ostream&;
@@ -227,5 +233,16 @@ auto operator<<(std::ostream& out, const ShaderProgram& program)
 #endif // DEBUG
 
 } // namespace my
+
+/*
+ * Definitions.
+ */
+
+template<typename T>
+auto my::Uniform::setData(const T&) const -> void {
+  throw std::runtime_error{
+    "Attempt to set unimplemented data type on uniform"
+  };
+}
 
 #endif // GRAPHICS_TYPES_HXX

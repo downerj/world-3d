@@ -107,21 +107,12 @@ auto my::GraphicsEngine::render() -> void {
   const Uniform& projectionUniform{_mainProgram.getUniforms().at(0)};
   const Uniform& viewUniform{_mainProgram.getUniforms().at(1)};
   const Uniform& modelUniform{_mainProgram.getUniforms().at(2)};
-  glUniformMatrix4fv(
-    projectionUniform.getLocation(), 1, false,
-    _camera->getProjectionMatrixPointer()
-  );
-  glUniformMatrix4fv(
-    viewUniform.getLocation(), 1, false,
-    _camera->getViewMatrixPointer()
-  );
+  projectionUniform.setData(_camera->getProjectionMatrix());
+  viewUniform.setData(_camera->getViewMatrix());
   glm::mat4 modelMatrix{1.};
   for (const auto& vao : _mainProgram.getVertexArrays()) {
     vao.bind();
-    glUniformMatrix4fv(
-      modelUniform.getLocation(), 1, false,
-      glm::value_ptr(modelMatrix)
-    );
+    modelUniform.setData(modelMatrix);
     glDrawElements(
       GL_TRIANGLES, vao.getIndexCount(), GL_UNSIGNED_SHORT, nullptr
     );

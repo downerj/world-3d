@@ -1,7 +1,5 @@
 #include "camera.hxx"
 
-#include <glm/gtc/type_ptr.hpp>
-
 my::Camera::Camera(float fovy, float aspect, float zNear, float zFar)
 : _projectionMatrix{glm::perspective(fovy, aspect, zNear, zFar)},
   _fovy{fovy}, _aspect{aspect}, _zNear{zNear}, _zFar{zFar} {}
@@ -66,13 +64,4 @@ auto my::Camera::getProjectionMatrix() const -> const glm::mat4& {
 
 auto my::Camera::getViewMatrix() const -> const glm::mat4& {
   return _viewMatrix;
-}
-
-auto my::Camera::getProjectionMatrixPointer() const
--> const glm::mat4::value_type* {
-  return glm::value_ptr(_projectionMatrix);
-}
-
-auto my::Camera::getViewMatrixPointer() const -> const glm::mat4::value_type* {
-  return glm::value_ptr(_viewMatrix);
 }

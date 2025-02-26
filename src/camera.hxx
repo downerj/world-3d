@@ -26,8 +26,6 @@ public:
   auto update() -> void;
   auto getProjectionMatrix() const -> const glm::mat4&;
   auto getViewMatrix() const -> const glm::mat4&;
-  auto getProjectionMatrixPointer() const -> const glm::mat4::value_type*;
-  auto getViewMatrixPointer() const -> const glm::mat4::value_type*;
 
 private:
   glm::mat4 _projectionMatrix{1.};
