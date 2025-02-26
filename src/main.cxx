@@ -7,7 +7,7 @@
 
 #include "debug.hxx"
 #include "game.hxx"
-#include "graphics.hxx"
+#include "graphics-engine.hxx"
 #include "io.hxx"
 #include "window.hxx"
 

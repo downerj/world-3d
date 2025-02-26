@@ -1,4 +1,4 @@
-#include "graphics.hxx"
+#include "graphics-engine.hxx"
 
 #include <array>
 #include <cmath>
