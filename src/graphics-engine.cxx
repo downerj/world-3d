@@ -68,9 +68,9 @@ my::GraphicsEngine::GraphicsEngine()
     "color", colorBuffer, geometry.getColorCount(),
     AttributeType::Float, false, 0, nullptr
   };
-  VertexArrayBuilder vaoBuilder{};
+  VertexArrayBuilder& vaoBuilder{_mainProgram.getVertexArrayBuilder()};
   vaoBuilder.setIndexCount(geometry.getIndexCount());
-  vaoBuilder << &_mainProgram << &indexBuffer;
+  vaoBuilder << &indexBuffer;
   vaoBuilder << &positionAttribute << &colorAttribute;
   VertexArray vao{vaoBuilder.build()};
   std::vector<VertexArray>& vertexArrays{_mainProgram.getVertexArrays()};

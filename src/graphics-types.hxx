@@ -93,8 +93,12 @@ class VertexArray;
 
 class VertexArrayBuilder {
 public:
-  friend auto operator<<(VertexArrayBuilder&, ShaderProgram*)
-  -> VertexArrayBuilder&;
+  VertexArrayBuilder(ShaderProgram& program);
+  VertexArrayBuilder() = delete;
+  VertexArrayBuilder(const VertexArrayBuilder&) = delete;
+  VertexArrayBuilder(VertexArrayBuilder&&) = delete;
+  auto operator=(const VertexArrayBuilder&) = delete;
+  auto operator=(VertexArrayBuilder&&) = delete;
   friend auto operator<<(VertexArrayBuilder&, ShaderAttribute*)
   -> VertexArrayBuilder&;
   friend auto operator<<(VertexArrayBuilder&, Buffer*)
@@ -103,14 +107,12 @@ public:
   auto build() -> VertexArray;
 
 private:
-  ShaderProgram* _program{nullptr};
+  ShaderProgram& _program;
   std::vector<ShaderAttribute*> _attributes{};
   Buffer* _indexBuffer{nullptr};
   GLint _indexCount{-1};
 };
 
-auto operator<<(VertexArrayBuilder& builder, ShaderProgram* program)
--> VertexArrayBuilder&;
 auto operator<<(VertexArrayBuilder& builder, ShaderAttribute* attribute)
 -> VertexArrayBuilder&;
 auto operator<<(VertexArrayBuilder& builder, Buffer* buffer)
@@ -216,6 +218,8 @@ public:
   friend auto operator<<(std::ostream&, const ShaderProgram&) -> std::ostream&;
 #endif // DEBUG
   auto getID() const -> GLuint;
+  auto getVertexArrayBuilder() const -> const VertexArrayBuilder&;
+  auto getVertexArrayBuilder() -> VertexArrayBuilder&;
   auto getVertexArrays() const -> const std::vector<VertexArray>&;
   auto getVertexArrays() -> std::vector<VertexArray>&;
   auto getUniforms() const -> const std::vector<Uniform>&;
@@ -224,6 +228,7 @@ public:
 
 private:
   GLuint _id;
+  VertexArrayBuilder _vertexArrayBuilder{*this};
   std::vector<VertexArray> _vertexArrays{};
   std::vector<Uniform> _uniforms{};
   bool _valid{true};

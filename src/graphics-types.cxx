@@ -102,11 +102,8 @@ my::ShaderAttribute::ShaderAttribute(
 ) : name{name_}, buffer{buffer_}, size{size_}, type{type_},
     normalized{normalized_}, stride{stride_}, pointer{pointer_} {}
 
-auto my::operator<<(VertexArrayBuilder& builder, ShaderProgram* program)
--> VertexArrayBuilder& {
-  builder._program = program;
-  return builder;
-}
+my::VertexArrayBuilder::VertexArrayBuilder(ShaderProgram& program)
+: _program{program} {}
 
 auto my::operator<<(VertexArrayBuilder& builder, ShaderAttribute* attribute)
 -> VertexArrayBuilder& {
@@ -145,15 +142,8 @@ auto my::VertexArrayBuilder::build() -> VertexArray {
   glBindVertexArray(id);
 
   for (const auto attribute : _attributes) {
-#ifdef DEBUG
-    if (!_program) {
-      throw std::runtime_error{
-        "Attempt to build vertex array using attributes and missing shader program"
-      };
-    }
-#endif // DEBUG
     const GLint location{glGetAttribLocation(
-      _program->getID(), attribute->name.data()
+      _program.getID(), attribute->name.data()
     )};
     attribute->buffer.bind();
     glVertexAttribPointer(
@@ -171,7 +161,6 @@ auto my::VertexArrayBuilder::build() -> VertexArray {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-  _program = nullptr;
   _attributes.clear();
   _indexBuffer = nullptr;
 
@@ -425,6 +414,15 @@ auto my::operator<<(std::ostream& out, const ShaderProgram& program)
 
 auto my::ShaderProgram::getID() const -> GLuint {
   return _id;
+}
+
+auto my::ShaderProgram::getVertexArrayBuilder() const
+-> const VertexArrayBuilder& {
+  return _vertexArrayBuilder;
+}
+
+auto my::ShaderProgram::getVertexArrayBuilder() -> VertexArrayBuilder& {
+  return _vertexArrayBuilder;
 }
 
 auto my::ShaderProgram::getVertexArrays() const
