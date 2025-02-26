@@ -4,6 +4,7 @@
 #include <cstddef>
 #ifdef DEBUG
 #include <iostream>
+#include <stdexcept>
 #endif // DEBUG
 #include <string_view>
 #include <vector>
@@ -131,6 +132,7 @@ public:
   auto getIndexCount() const -> GLsizei;
   auto bind() const -> void;
   auto unbind() const -> void;
+  auto drawTriangles() const -> void;
 
 private:
   GLuint _id{};
@@ -240,9 +242,11 @@ auto operator<<(std::ostream& out, const ShaderProgram& program)
 
 template<typename T>
 auto my::Uniform::setData(const T&) const -> void {
+#ifdef DEBUG
   throw std::runtime_error{
     "Attempt to set unimplemented data type on uniform"
   };
+#endif // DEBUG
 }
 
 #endif // GRAPHICS_TYPES_HXX

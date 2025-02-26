@@ -113,9 +113,7 @@ auto my::GraphicsEngine::render() -> void {
   for (const auto& vao : _mainProgram.getVertexArrays()) {
     vao.bind();
     modelUniform.setData(modelMatrix);
-    glDrawElements(
-      GL_TRIANGLES, vao.getIndexCount(), GL_UNSIGNED_SHORT, nullptr
-    );
+    vao.drawTriangles();
     vao.unbind();
   }
 }

@@ -234,6 +234,12 @@ auto my::VertexArray::unbind() const -> void {
   glBindVertexArray(0);
 }
 
+auto my::VertexArray::drawTriangles() const -> void {
+  glDrawElements(
+    GL_TRIANGLES, _indexCount, GL_UNSIGNED_SHORT, nullptr
+  );
+}
+
 my::Shader::Shader(
   ShaderType type, std::string_view source
 ) : _type{type}, _id{glCreateShader(static_cast<GLenum>(type))} {
