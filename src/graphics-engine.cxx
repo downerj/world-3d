@@ -95,14 +95,11 @@ auto my::GraphicsEngine::resize(int width, int height) -> void {
   _windowHeight = height;
 }
 
-auto my::GraphicsEngine::render() -> void {
+auto my::GraphicsEngine::render() const -> void {
   if (!_camera) {
     return;
   }
-  glViewport(0, 0, _windowWidth, _windowHeight);
-  glClearColor(0., .5, 1., 1.);
-  glClear(GL_COLOR_BUFFER_BIT);
-
+  resetFrame();
   _mainProgram.use();
   const Uniform& projectionUniform{_mainProgram.getUniforms().at(0)};
   const Uniform& viewUniform{_mainProgram.getUniforms().at(1)};
@@ -116,6 +113,12 @@ auto my::GraphicsEngine::render() -> void {
     vao.drawTriangles();
     vao.unbind();
   }
+}
+
+auto my::GraphicsEngine::resetFrame() const -> void {
+  glViewport(0, 0, _windowWidth, _windowHeight);
+  glClearColor(0., .5, 1., 1.);
+  glClear(GL_COLOR_BUFFER_BIT);
 }
 
 namespace {

@@ -26,7 +26,7 @@ public:
 
   auto setCamera(const Camera* camera) -> void;
   auto resize(int width, int height) -> void;
-  auto render() -> void;
+  auto render() const -> void;
 
 private:
   bool _glAvailable;
@@ -35,6 +35,8 @@ private:
   ShaderProgram _mainProgram;
   std::vector<Buffer> _buffers{};
   const Camera* _camera{nullptr};
+
+  auto resetFrame() const -> void;
 };
 
 } // namespace my
