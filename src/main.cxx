@@ -9,6 +9,7 @@
 #include "game.hxx"
 #include "graphics-engine.hxx"
 #include "io.hxx"
+#define USE_GLFW
 #include "window.hxx"
 
 auto main(int, char**) -> int {

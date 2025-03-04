@@ -3,7 +3,9 @@
 
 #include <tuple>
 
+#ifdef USE_GLFW
 struct GLFWwindow;
+#endif // USE_GLFW
 
 /*
  * Declarations.
@@ -27,7 +29,9 @@ public:
   WindowHandler operator=(WindowHandler&&) = delete;
   ~WindowHandler() noexcept;
 
+#ifdef USE_GLFW
   auto getWindow() -> GLFWwindow*;
+#endif // USE_GLFW
   auto getActions() const -> const WindowActions&;
   auto getWidth() const -> int;
   auto getHeight() const -> int;
@@ -44,14 +48,18 @@ private:
   const char* _title{"World 3D"};
   const int glVersionMajor{3};
   const int glVersionMinor{3};
+#ifdef USE_GLFW
   GLFWwindow* _window;
+#endif // USE_GLFW
   WindowActions _actions{};
   int _width;
   int _height;
-  
+
+#ifdef USE_GLFW
   static auto onKeyGLFW(
     GLFWwindow* window, int key, int scancode, int action, int mods
   ) -> void;
+#endif // USE_GLFW
   auto onKey(int key, int action, int mods) -> void;
 };
 

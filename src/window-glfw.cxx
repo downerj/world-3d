@@ -1,3 +1,4 @@
+#define USE_GLFW
 #include "window.hxx"
 
 #include <stdexcept>
