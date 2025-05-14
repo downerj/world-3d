@@ -1,4 +1,5 @@
-#define USE_GLFW
+#ifdef USE_GLFW
+
 #include "window.hxx"
 
 #include <stdexcept>
@@ -155,3 +156,5 @@ auto errorCallbackGLFW(int, const char* description) -> void {
 #endif // DEBUG
 
 } // namespace
+
+#endif // USE_GLFW

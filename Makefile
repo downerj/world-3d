@@ -6,6 +6,7 @@
 
 STATIC_BUILD ?= 0
 DEBUG_BUILD ?= 0
+USE_GLFW ?= 1
 
 #
 # Constants.
@@ -64,6 +65,10 @@ else
 DEBUGS += -DDEBUG -g
 OPTIMIZE += -Og
 endif
+DEFINES =
+ifeq (${USE_GLFW}, 1)
+DEFINES += -DUSE_GLFW
+endif
 
 #
 # Libraries.
@@ -98,7 +103,7 @@ include ${DEPENDS}
 endif
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.cxx
-	${CXX} -c -o $@ $< ${GEN_DEPS} ${WARNINGS} ${DEBUGS} ${OPTIMIZE} ${CXX_STD} ${INCLUDES}
+	${CXX} -c -o $@ $< ${GEN_DEPS} ${WARNINGS} ${DEBUGS} ${OPTIMIZE} ${CXX_STD} ${INCLUDES} ${DEFINES}
 
 clean:
 	${RM} -v ${EXE_DIR}/* ${OBJ_DIR}/*
