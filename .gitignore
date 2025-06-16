@@ -8,3 +8,4 @@ tmp/
 x86/
 x64/
 **/*.vcxproj.user
+.idea/
