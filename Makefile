@@ -97,6 +97,7 @@ exe: ${EXE}
 
 ${EXE}: ${OBJECTS}
 	${CXX} -o $@ $^ ${LIBS}
+	cp -r -v ${RES_DIR}/ ${EXE_DIR}/
 
 ifneq (${DEPENDS},)
 include ${DEPENDS}
